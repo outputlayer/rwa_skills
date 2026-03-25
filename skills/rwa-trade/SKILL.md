@@ -63,13 +63,16 @@ rwa --json gm hours
 
 ### 2. Find Tokens
 
+**ALWAYS use `--search` to filter** — never dump the full list, it wastes tokens:
 ```bash
-rwa --json gm list                # All 264 tokens
-rwa --json gm list --search oil    # Filter by keyword (searches symbol + name)
+rwa --json gm list --search biotech   # Search by sector/keyword
+rwa --json gm list --search oil
 rwa --json gm list --search defense
 rwa --json gm list --search etf
+rwa --json gm list --search amgen     # Search by company name
 ```
 
+Only use `rwa --json gm list` (no filter) if the user explicitly asks for all tokens.
 JSON output includes `type` ("stock" or "etf") and cleaned company name.
 Both `TSLA` and `TSLAon` symbol formats accepted.
 
@@ -110,9 +113,12 @@ rwa gm sell SPY 50% -y        # Sell half
 - "Insufficient USDC" → send USDC to wallet before buying
 - "Balance is 0 — nothing to trade" → wallet has no tokens to sell
 - "Minimum buy amount is 1.0 USDC" → amount too small
+- "Swap failed (code -2004)" → swap rejected by market maker. Do NOT retry immediately. Wait 5s, get a new quote, try again.
 - "Swap failed (code -2005)" → Jupiter internal error. CLI retries once automatically. If it still fails, try a different amount or try again later. Do NOT retry more than once manually.
 - "Swap failed (code -2002)" → route expired. CLI retries once. Try again.
 - "Swap failed (code -2003)" → slippage exceeded — market volatility, try smaller amount
+- "No swap route found" → do NOT run quotes/trades in parallel. Jupiter rejects concurrent requests from the same wallet.
+- "Jupiter API error (HTTP 400)" → same as above. Stop using `&`. Run commands one at a time.
 - "Jupiter API error (HTTP 429)" → rate limited. Wait 5s, try again. Never run parallel quotes.
 
 ## Safety — Pre-Trade Checklist
