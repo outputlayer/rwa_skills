@@ -56,6 +56,7 @@ Do NOT prepend `export PATH=...` to every command. The installer adds rwa to PAT
 |------|:---:|
 | `--json` | Yes — always use for machine-readable output |
 | `-y` | Yes — skip confirmation on buy/sell |
+| `--slippage <BPS>` | No — max slippage in basis points (e.g. 50 = 0.5%). Default: auto (Jupiter RTSE) |
 | `--rpc-url <URL>` | No — custom Solana RPC (or `RWA_RPC_URL` env) |
 
 ## Workflow
@@ -105,12 +106,29 @@ rwa --json gm quote TSLA 5 --sell     # Sell: 5 TSLA → USDC
 
 ```bash
 rwa gm buy TSLA 100 -y       # Buy with USDC
+rwa gm buy TSLA 100 -y --slippage 50  # Buy with max 0.5% slippage
 rwa gm sell TSLA all -y       # Sell entire position
 rwa gm sell SPY 50% -y        # Sell half
 rwa --json gm close-all -y    # Sell ALL positions at once
 rwa --json gm close-all 50% -y # Sell 50% of every position
 rwa --json gm close-all 10% -y # Sell 10% of every position
 ```
+
+### 5. Reclaim Rent
+
+Close empty token accounts to reclaim SOL rent (~0.002 SOL per account):
+
+```bash
+rwa --json gm reclaim                # Close all empty token accounts
+rwa --json gm reclaim --token TSLA   # Close only empty TSLA accounts
+```
+
+JSON output:
+```json
+{"status":"success","accounts_closed":5,"sol_reclaimed":"0.010196400","signatures":["https://solscan.io/tx/..."]}
+```
+
+Note: USDC token account is preserved (never closed) since it's needed for trading.
 
 ### 5. Close All / Reduce All Positions
 
@@ -204,6 +222,9 @@ rwa --json gm hours
 
 # Step 4: Only then trade
 rwa gm buy TSLA 100 -y
+
+# Step 5: After selling all, reclaim rent
+rwa --json gm reclaim
 ```
 
 If any step fails, tell the user what's missing before attempting the trade.

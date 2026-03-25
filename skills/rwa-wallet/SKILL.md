@@ -113,3 +113,23 @@ rwa gm send SOL 50% <RECIPIENT_ADDRESS> -y
 - "Insufficient SOL for gas" → need ≥0.005 SOL
 - "Balance is 0" → nothing to send
 - Recipient ATA is auto-created if it doesn't exist
+
+## Reclaim Rent
+
+Close empty token accounts to reclaim SOL rent (~0.002 SOL per account). Useful after selling all positions.
+
+```bash
+# Reclaim all empty token accounts
+rwa --json gm reclaim
+
+# Reclaim only for a specific token
+rwa --json gm reclaim --token TSLA
+```
+
+### JSON Output
+
+```json
+{"status":"success","accounts_closed":3,"sol_reclaimed":"0.006117840","signatures":["5K1z..."]}
+```
+
+Note: USDC token account is never closed — it's preserved for trading.
