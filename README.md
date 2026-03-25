@@ -6,11 +6,13 @@ Skills are reusable capabilities for AI coding agents. They provide procedural k
 
 ## Quick Start — copy this to any AI agent
 
-> I'd like to trade tokenized stocks on Solana.
->
-> Install skills if npm is available: `npx skills add outputlayer/rwa_skills -g`
->
-> Otherwise install the CLI directly: `curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash`
+```
+I'd like to trade tokenized stocks on Solana.
+
+Install skills if npm is available: npx skills add outputlayer/rwa_skills -g
+
+Otherwise install the CLI directly: curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
+```
 
 The agent will install the tools, create a wallet, and guide you through your first trade.
 
