@@ -72,16 +72,19 @@ rwa --json gm hours
 
 **ALWAYS use `--search` to filter** — never dump the full list, it wastes tokens:
 ```bash
-rwa --json gm list --search biotech   # Search by sector/keyword
-rwa --json gm list --search oil
-rwa --json gm list --search defense
-rwa --json gm list --search etf
-rwa --json gm list --search amgen     # Search by company name
+rwa --json gm list --search healthcare  # Search by sector
+rwa --json gm list --search technology  # Search by sector
+rwa --json gm list --search energy      # Search by sector
+rwa --json gm list --search etf         # Search by type
+rwa --json gm list --search biotech     # Search by keyword
+rwa --json gm list --search amgen       # Search by company name
 ```
 
 Only use `rwa --json gm list` (no filter) if the user explicitly asks for all tokens.
-JSON output includes `type` ("stock" or "etf") and cleaned company name.
+JSON output includes `type` ("stock" or "etf"), `sector` (e.g. "Technology", "Healthcare"), and cleaned company name.
 Both `TSLA` and `TSLAon` symbol formats accepted.
+
+Available sectors: Technology, Healthcare, Financials, Consumer Discretionary, Energy, Industrials, Materials, Utilities, Real Estate Sector, Infrastructure.
 
 ### 3. Get a Quote
 
@@ -133,6 +136,9 @@ JSON output includes `sold` (successful sells) and `failed` (skipped tokens):
 ```json
 // rwa --json gm quote TSLA 100
 {"input":"USDC","output":"TSLAon","in_amount":100.0,"out_amount":0.26,"price":385.0}
+
+// rwa --json gm list --search tsla
+[{"symbol":"TSLAon","name":"Tesla","type":"stock","sector":"Consumer Discretionary"}]
 ```
 
 ## Errors & What To Do
