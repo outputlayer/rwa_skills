@@ -44,6 +44,11 @@ Do NOT prepend `export PATH=...` to every command. The installer adds rwa to PAT
   rwa --json gm close-all -y
   ```
   This sells every GM position sequentially, skipping any that fail. Do NOT sell each token manually.
+- **Reduce all positions**: Use `close-all` with a percentage:
+  ```bash
+  rwa --json gm close-all 50% -y    # Sell 50% of every position
+  rwa --json gm close-all 10% -y    # Sell 10% of every position
+  ```
 
 ## Flags
 
@@ -92,14 +97,18 @@ rwa gm buy TSLA 100 -y       # Buy with USDC
 rwa gm sell TSLA all -y       # Sell entire position
 rwa gm sell SPY 50% -y        # Sell half
 rwa --json gm close-all -y    # Sell ALL positions at once
+rwa --json gm close-all 50% -y # Sell 50% of every position
+rwa --json gm close-all 10% -y # Sell 10% of every position
 ```
 
-### 5. Close All Positions
+### 5. Close All / Reduce All Positions
 
-Use `close-all` to sell every GM token position in one command. The CLI handles selling each token sequentially with proper delays, skipping any that fail.
+Use `close-all` to sell every GM token position. Optionally pass a percentage to sell only a portion of each position.
 
 ```bash
-rwa --json gm close-all -y
+rwa --json gm close-all -y          # Sell 100% of every position
+rwa --json gm close-all 50% -y      # Sell 50% of every position
+rwa --json gm close-all 10% -y      # Sell 10% of every position
 ```
 
 JSON output includes `sold` (successful sells) and `failed` (skipped tokens):
@@ -108,6 +117,10 @@ JSON output includes `sold` (successful sells) and `failed` (skipped tokens):
 ```
 
 **ALWAYS use `close-all` instead of selling tokens one by one.** The CLI handles retries, delays, and error skipping internally.
+
+- "Sell all positions" → `rwa --json gm close-all -y`
+- "Reduce portfolio by 50%" → `rwa --json gm close-all 50% -y`  
+- "Take 10% profit" → `rwa --json gm close-all 10% -y`
 
 ## Amount Formats
 
@@ -160,6 +173,7 @@ The CLI enforces these checks automatically, but agents should verify upfront to
 - `send USDC all` sends **ALL USDC** in the wallet, not just recent sell proceeds
 - **When user says "sell X% and send proceeds"**: calculate the USDC amount from sell results and use `send USDC <exact_amount>`, NEVER `send USDC all`
 - **To sell all and send**: use `rwa --json gm close-all -y`, then `send USDC <amount_from_close_all_total_usdc>`
+- **To reduce all positions by X%**: use `rwa --json gm close-all X% -y` (e.g. `close-all 50% -y`)
 
 **Recommended agent flow before any trade:**
 ```bash

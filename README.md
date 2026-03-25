@@ -9,9 +9,9 @@ Skills are reusable capabilities for AI coding agents. They provide procedural k
 ```
 I'd like to trade tokenized stocks on Solana.
 
-Install skills if npm is available: npx skills add outputlayer/rwa_skills -g
+First install the CLI: curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
 
-Otherwise install the CLI directly: curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
+Then if npm is available, install skills: npx skills add outputlayer/rwa_skills -g -y
 ```
 
 The agent will install the tools, create a wallet, and guide you through your first trade.
@@ -25,7 +25,7 @@ These skills work with any agent that supports the [Agent Skills](https://agents
 Install using the [npx skills](https://skills.sh/) CLI:
 
 ```
-npx skills add outputlayer/rwa_skills -g
+npx skills add outputlayer/rwa_skills -g -y
 ```
 
 ### Cursor
@@ -49,7 +49,7 @@ Skills are contextual and auto-loaded based on your conversation. Only the relev
 
 | Skill | Description | Triggers |
 |-------|-------------|----------|
-| **rwa-trade** | Buy/sell tokenized stocks, get quotes, check market hours, list tokens, close all positions | "buy TSLA", "sell stocks", "close all", "quote", "market hours" |
+| **rwa-trade** | Buy/sell tokenized stocks, get quotes, check market hours, list tokens, close all / reduce positions | "buy TSLA", "sell stocks", "close all", "reduce 50%", "quote", "market hours" |
 | **rwa-portfolio** | View holdings, P&L, allocation, price history | "portfolio", "holdings", "price history" |
 | **rwa-wallet** | Create/import wallets, install CLI, send/withdraw funds | "create wallet", "import keys", "install rwa", "send USDC" |
 
