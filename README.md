@@ -4,6 +4,16 @@ A collection of [Agent Skills](https://agentskills.io/) for trading tokenized st
 
 Skills are reusable capabilities for AI coding agents. They provide procedural knowledge that helps agents trade tokenized stocks, check portfolios, manage wallets, and more using Ondo Global Markets on Solana.
 
+## Quick Start — copy this to any AI agent
+
+> I'd like to trade tokenized stocks on Solana.
+>
+> Install skills if npm is available: `npx skills add outputlayer/rwa_skills -g`
+>
+> Otherwise install the CLI directly: `curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash`
+
+The agent will install the tools, create a wallet, and guide you through your first trade.
+
 ## Installing
 
 These skills work with any agent that supports the [Agent Skills](https://agentskills.io/) standard.
