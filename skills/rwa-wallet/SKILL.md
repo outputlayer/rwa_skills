@@ -3,9 +3,10 @@ name: rwa-wallet
 description: >
   Set up and manage Solana wallets for trading tokenized stocks via the rwa CLI.
   Use when user asks about wallet setup, key generation, importing seed phrase,
-  showing wallet address, or installing the rwa CLI. Triggers: "create wallet",
-  "generate keys", "import seed phrase", "show address", "install rwa",
-  "fund wallet", "setup trading".
+  showing wallet address, installing the rwa CLI, or sending/withdrawing funds.
+  Triggers: "create wallet", "generate keys", "import seed phrase",
+  "show address", "install rwa", "fund wallet", "setup trading",
+  "send SOL", "send USDC", "withdraw", "transfer tokens".
 ---
 
 # RWA Wallet
@@ -81,3 +82,37 @@ Free RPC providers: [Helius](https://helius.dev/), [QuickNode](https://quicknode
 - Wallet key stored at `~/.config/rwa/id.json` with `0600` permissions (Unix)
 - Never output private keys or seed phrases
 - Keep seed phrase backed up offline
+
+## Send / Withdraw
+
+Transfer SOL, USDC, or GM tokens to another Solana address.
+
+```bash
+# Send SOL
+rwa gm send SOL 1.5 <RECIPIENT_ADDRESS> -y
+
+# Send USDC
+rwa gm send USDC 100 <RECIPIENT_ADDRESS> -y
+
+# Send GM tokens (Token-2022)
+rwa gm send TSLA 0.5 <RECIPIENT_ADDRESS> -y
+
+# Send all USDC
+rwa gm send USDC all <RECIPIENT_ADDRESS> -y
+
+# Send 50% of SOL
+rwa gm send SOL 50% <RECIPIENT_ADDRESS> -y
+```
+
+### JSON Output
+
+```json
+{"status":"success","token":"USDC","amount":"100.00","recipient":"Dn9E...","tx":"https://solscan.io/tx/..."}
+```
+
+### Errors
+
+- "Cannot send to yourself" → use a different recipient
+- "Insufficient SOL for gas" → need ≥0.005 SOL
+- "Balance is 0" → nothing to send
+- Recipient ATA is auto-created if it doesn't exist
