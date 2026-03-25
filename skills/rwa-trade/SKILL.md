@@ -105,22 +105,27 @@ rwa gm sell SPY 50% -y        # Sell half
 {"input":"USDC","output":"TSLAon","in_amount":100.0,"out_amount":0.26,"price":385.0}
 ```
 
-## Errors
+## Errors & What To Do
 
-- "market closed" → check `rwa --json gm hours`, wait for open
-- "Solana RPC unavailable" → retry in a few seconds, or set `RWA_RPC_URL`
-- "No wallet found" → run `rwa keys generate` first
-- "Insufficient SOL for gas" → send ≥0.005 SOL to wallet
-- "Insufficient USDC" → send USDC to wallet before buying
-- "Balance is 0 — nothing to trade" → wallet has no tokens to sell
-- "Minimum buy amount is 1.0 USDC" → amount too small
-- "Swap failed (code -2004)" → swap rejected by market maker. Do NOT retry immediately. Wait 5s, get a new quote, try again.
-- "Swap failed (code -2005)" → Jupiter internal error. CLI retries once automatically. If it still fails, try a different amount or try again later. Do NOT retry more than once manually.
-- "Swap failed (code -2002)" → route expired. CLI retries once. Try again.
-- "Swap failed (code -2003)" → slippage exceeded — market volatility, try smaller amount
-- "No swap route found" → do NOT run quotes/trades in parallel. Jupiter rejects concurrent requests from the same wallet.
-- "Jupiter API error (HTTP 400)" → same as above. Stop using `&`. Run commands one at a time.
-- "Jupiter API error (HTTP 429)" → rate limited. Wait 5s, try again. Never run parallel quotes.
+The CLI has built-in retry logic (max 2 retries with fresh orders). Most transient errors resolve automatically. **Do NOT manually retry** unless the CLI says the swap failed after retries.
+
+| Error | Cause | Agent action |
+|-------|-------|-------------|
+| "market closed" | Trading hours ended | Run `rwa --json gm hours`, tell user when it opens |
+| "Solana RPC unavailable" | Rate-limited or down | Wait 5s, retry once. After 3 failures, tell user to set `RWA_RPC_URL` |
+| "No wallet found" | No keypair | Run `rwa keys generate` |
+| "Insufficient SOL for gas" | SOL < 0.01 | CLI auto-topups from USDC. If still fails, user needs to send SOL |
+| "Insufficient USDC" | Not enough to buy | Tell user to send USDC to wallet |
+| "Balance is 0" | Nothing to sell | Tell user they have no position |
+| "Minimum buy amount is 1.0 USDC" | Amount too small | Use at least $1 |
+| "Swap failed (code -2003)" | Quote expired between order and execute | CLI auto-retries with fresh order. Do NOT retry manually |
+| "Swap failed (code -2004)" | Market maker rejected | CLI auto-retries with fresh order. Do NOT retry manually |
+| "Swap failed (code -2005)" | Jupiter internal error | CLI auto-retries with fresh order. Do NOT retry manually |
+| "Swap failed (code -1000)" | Transaction didn't land | CLI auto-retries. Do NOT retry manually |
+| "No swap route found" | Running commands in parallel with `&` | **STOP.** Run sequentially, one at a time |
+| "Jupiter API error (HTTP 400)" | Parallel requests or no liquidity | Stop using `&`. If sequential, token has no liquidity |
+| "Jupiter API error (HTTP 429)" | Rate limited | Wait 5s, retry. Never run parallel commands |
+| "Quote not available from market maker" | No liquidity for this token | Skip this token, try another |
 
 ## Safety — Pre-Trade Checklist
 
