@@ -49,9 +49,9 @@ Skills are contextual and auto-loaded based on your conversation. Only the relev
 
 | Skill | Description | Triggers |
 |-------|-------------|----------|
-| **rwa-trade** | Buy/sell tokenized stocks, get quotes, check market hours, list tokens | "buy TSLA", "sell stocks", "quote", "market hours" |
+| **rwa-trade** | Buy/sell tokenized stocks, get quotes, check market hours, list tokens, close all positions | "buy TSLA", "sell stocks", "close all", "quote", "market hours" |
 | **rwa-portfolio** | View holdings, P&L, allocation, price history | "portfolio", "holdings", "price history" |
-| **rwa-wallet** | Create/import wallets, install CLI, configure RPC | "create wallet", "import keys", "install rwa" |
+| **rwa-wallet** | Create/import wallets, install CLI, send/withdraw funds | "create wallet", "import keys", "install rwa", "send USDC" |
 
 ## Skill Structure
 
