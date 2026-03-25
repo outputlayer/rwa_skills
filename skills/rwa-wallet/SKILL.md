@@ -25,7 +25,7 @@ cargo install --git https://github.com/outputlayer/rwa_cli --bin rwa
 
 Verify: `rwa --version`
 
-If `rwa` not found after install, add to PATH:
+If `rwa` not found after install, set PATH once per session (do NOT repeat on every command):
 ```bash
 export PATH="$HOME/.cargo/bin:$PATH"
 ```

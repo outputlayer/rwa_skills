@@ -18,6 +18,23 @@ Assume `rwa` is installed. If "command not found", install:
 curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
 ```
 
+After install, set PATH once per session (do NOT repeat on every command):
+```bash
+export PATH="$HOME/.cargo/bin:$PATH"
+```
+
+## Agent Guidelines
+
+- **PATH**: Set `export PATH` once at the start, then use `rwa` directly.
+- **Batch quotes**: To compare prices, run a loop — never quote one stock at a time with separate tool calls:
+  ```bash
+  for sym in TSLA AAPL NVDA SPY; do echo "$sym: $(rwa --json gm quote $sym 100 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'${d.get(\"output_usd\", d.get(\"out_amount\", \"?\"))}')" 2>/dev/null || echo 'N/A')"; done
+  ```
+- **Buy multiple**: Chain buys in one command:
+  ```bash
+  rwa gm buy TSLA 100 -y && rwa gm buy AAPL 100 -y && rwa gm buy NVDA 100 -y
+  ```
+
 ## Flags
 
 | Flag | Required for agents |

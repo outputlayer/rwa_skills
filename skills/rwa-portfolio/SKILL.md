@@ -18,6 +18,11 @@ Assume `rwa` is installed. If "command not found", install:
 curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
 ```
 
+After install, set PATH once per session (do NOT repeat on every command):
+```bash
+export PATH="$HOME/.cargo/bin:$PATH"
+```
+
 ## Portfolio
 
 ```bash
