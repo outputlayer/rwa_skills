@@ -39,10 +39,11 @@ Do NOT prepend `export PATH=...` to every command. The installer adds rwa to PAT
   ```bash
   rwa gm buy TSLA 100 -y && sleep 5 && rwa gm buy AAPL 100 -y && sleep 5 && rwa gm buy NVDA 100 -y
   ```
-- **Sell multiple**: Sequential with sleep:
+- **Sell multiple**: Use `close-all` to sell everything at once:
   ```bash
-  rwa gm sell TSLA all -y && sleep 5 && rwa gm sell AAPL all -y && sleep 5 && rwa gm sell NVDA all -y
+  rwa --json gm close-all -y
   ```
+  This sells every GM position sequentially, skipping any that fail. Do NOT sell each token manually.
 
 ## Flags
 
@@ -90,7 +91,23 @@ rwa --json gm quote TSLA 5 --sell     # Sell: 5 TSLA → USDC
 rwa gm buy TSLA 100 -y       # Buy with USDC
 rwa gm sell TSLA all -y       # Sell entire position
 rwa gm sell SPY 50% -y        # Sell half
+rwa --json gm close-all -y    # Sell ALL positions at once
 ```
+
+### 5. Close All Positions
+
+Use `close-all` to sell every GM token position in one command. The CLI handles selling each token sequentially with proper delays, skipping any that fail.
+
+```bash
+rwa --json gm close-all -y
+```
+
+JSON output includes `sold` (successful sells) and `failed` (skipped tokens):
+```json
+{"status":"success","sold":[{"token":"TSLAon","amount":"0.25","usdc":"96.50","tx":"https://solscan.io/tx/..."}],"failed":[],"total_usdc":"96.50"}
+```
+
+**ALWAYS use `close-all` instead of selling tokens one by one.** The CLI handles retries, delays, and error skipping internally.
 
 ## Amount Formats
 
