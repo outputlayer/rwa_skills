@@ -13,12 +13,12 @@ These skills work with any agent that supports the [Agent Skills](https://agents
 Install using the [npx skills](https://skills.sh/) CLI:
 
 ```
-npx skills add outputlayer/skills --skill rwa -g
+npx skills add outputlayer/rwa_skills --skill rwa -g
 ```
 
 ### Cursor
 
-Add via Settings → Rules → Add Rule → Remote Rule (GitHub) with `outputlayer/skills`.
+Add via Settings → Rules → Add Rule → Remote Rule (GitHub) with `outputlayer/rwa_skills`.
 
 ### Manual install
 
