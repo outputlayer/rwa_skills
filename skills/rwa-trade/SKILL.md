@@ -81,5 +81,34 @@ rwa gm sell SPY 50% -y        # Sell half
 
 - "market closed" → check `rwa --json gm hours`, wait for open
 - "Solana RPC unavailable" → retry in a few seconds, or set `RWA_RPC_URL`
-- Wallet required for buy/sell → run `rwa keys generate` first
-- Fund wallet with SOL (gas) + USDC (trading) before first trade
+- "No wallet found" → run `rwa keys generate` first
+- "Insufficient SOL for gas" → send ≥0.005 SOL to wallet
+- "Insufficient USDC" → send USDC to wallet before buying
+- "Balance is 0 — nothing to trade" → wallet has no tokens to sell
+- "Minimum buy amount is 1.0 USDC" → amount too small
+
+## Safety — Pre-Trade Checklist
+
+The CLI enforces these checks automatically, but agents should verify upfront to give clear guidance:
+
+1. **Wallet exists**: `rwa keys show` — if fails, run `rwa keys generate` first
+2. **Has SOL for gas**: portfolio must show `sol >= 0.005`
+3. **Has USDC for buys**: portfolio must show `usdc >= buy amount`
+4. **Market is open**: `rwa --json gm hours` must return `"status":"OPEN"`
+
+**Recommended agent flow before any trade:**
+```bash
+# Step 1: Verify wallet
+rwa keys show
+
+# Step 2: Check balances
+rwa --json gm portfolio
+
+# Step 3: Check market
+rwa --json gm hours
+
+# Step 4: Only then trade
+rwa gm buy TSLA 100 -y
+```
+
+If any step fails, tell the user what's missing before attempting the trade.
