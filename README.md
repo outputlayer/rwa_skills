@@ -2,7 +2,7 @@
 
 A collection of [Agent Skills](https://agentskills.io/) for trading tokenized stocks & ETFs on Solana via the [rwa CLI](https://github.com/outputlayer/rwa_cli).
 
-Skills are reusable capabilities for AI coding agents. They provide procedural knowledge that helps agents trade tokenized stocks, check portfolios, discover tokens, and more using Ondo Global Markets on Solana.
+Skills are reusable capabilities for AI coding agents. They provide procedural knowledge that helps agents trade tokenized stocks, check portfolios, manage wallets, and more using Ondo Global Markets on Solana.
 
 ## Installing
 
@@ -13,7 +13,7 @@ These skills work with any agent that supports the [Agent Skills](https://agents
 Install using the [npx skills](https://skills.sh/) CLI:
 
 ```
-npx skills add outputlayer/rwa_skills --skill rwa -g
+npx skills add outputlayer/rwa_skills -g
 ```
 
 ### Cursor
@@ -33,11 +33,13 @@ Clone this repo and copy the skill folders into the appropriate directory for yo
 
 ## Skills
 
-Skills are contextual and auto-loaded based on your conversation.
+Skills are contextual and auto-loaded based on your conversation. Only the relevant skill is loaded — keeping context lean.
 
-| Skill | Description |
-|-------|-------------|
-| **rwa** | Trade 264 tokenized stocks & ETFs (Ondo Global Markets) on Solana — buy, sell, quote, portfolio, price history via the rwa CLI |
+| Skill | Description | Triggers |
+|-------|-------------|----------|
+| **rwa-trade** | Buy/sell tokenized stocks, get quotes, check market hours, list tokens | "buy TSLA", "sell stocks", "quote", "market hours" |
+| **rwa-portfolio** | View holdings, P&L, allocation, price history | "portfolio", "holdings", "price history" |
+| **rwa-wallet** | Create/import wallets, install CLI, configure RPC | "create wallet", "import keys", "install rwa" |
 
 ## Skill Structure
 
