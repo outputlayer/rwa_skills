@@ -5,10 +5,6 @@ description: >
   Use when user wants to trade, buy, sell, get a quote, check market hours,
   or list available tokens. Triggers: "buy TSLA", "sell stocks", "trade RWA",
   "quote NVDA", "market hours", "list tokens", "what can I buy on Solana".
-compatibility: Requires network access and the rwa CLI (auto-installed on first use). Works on macOS and Linux.
-metadata:
-  author: outputlayer
-  version: "1.0"
 ---
 
 # RWA Trade

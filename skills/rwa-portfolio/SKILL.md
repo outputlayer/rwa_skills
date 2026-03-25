@@ -5,10 +5,6 @@ description: >
   Use when user asks about portfolio, holdings, positions, balance, allocation, P&L,
   24h change, price history, or chart data. Triggers: "show portfolio", "my holdings",
   "how much TSLA do I have", "price history SPY", "token performance".
-compatibility: Requires network access and the rwa CLI. Works on macOS and Linux.
-metadata:
-  author: outputlayer
-  version: "1.0"
 ---
 
 # RWA Portfolio

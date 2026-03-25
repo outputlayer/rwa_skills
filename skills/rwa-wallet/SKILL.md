@@ -6,10 +6,6 @@ description: >
   showing wallet address, or installing the rwa CLI. Triggers: "create wallet",
   "generate keys", "import seed phrase", "show address", "install rwa",
   "fund wallet", "setup trading".
-compatibility: Requires the rwa CLI. Works on macOS and Linux.
-metadata:
-  author: outputlayer
-  version: "1.0"
 ---
 
 # RWA Wallet
