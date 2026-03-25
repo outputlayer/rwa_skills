@@ -13,15 +13,12 @@ View holdings, allocation, P&L, and price history for tokenized stocks on Solana
 
 ## Prerequisites
 
-Assume `rwa` is installed. If "command not found", install:
+Assume `rwa` is installed and in PATH. If "command not found", install:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
 ```
 
-After install, set PATH once per session (do NOT repeat on every command):
-```bash
-export PATH="$HOME/.cargo/bin:$PATH"
-```
+Do NOT prepend `export PATH=...` to every command. The installer adds rwa to PATH automatically.
 
 ## Portfolio
 

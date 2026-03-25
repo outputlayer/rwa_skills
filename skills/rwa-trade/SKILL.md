@@ -13,32 +13,33 @@ Buy and sell 264 tokenized stocks & ETFs ([Ondo Global Markets](https://ondo.fin
 
 ## Prerequisites
 
-Assume `rwa` is installed. If "command not found", install:
+Assume `rwa` is installed and in PATH. If "command not found", install:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
 ```
 
-After install, set PATH once per session (do NOT repeat on every command):
-```bash
-export PATH="$HOME/.cargo/bin:$PATH"
-```
+Do NOT prepend `export PATH=...` to every command. The installer adds rwa to PATH automatically.
 
 ## Agent Guidelines
 
-- **PATH**: Set `export PATH` once at the start, then use `rwa` directly.
-- **NEVER use `&` (background) for ANY rwa command** — not for quotes, trades, or anything else. Jupiter API rejects concurrent requests from the same wallet with HTTP 400. Always run one command at a time, sequentially.
+- **NEVER use `&` (background) for ANY rwa command** — not for quotes, trades, history, or anything else. Jupiter API rejects concurrent requests from the same wallet with HTTP 400. Always run one command at a time, sequentially.
 - **Wait between commands**: Add `sleep 3` between consecutive rwa commands. Solana RPC rate-limits aggressively.
 - **RPC errors ("Solana RPC unavailable")**: Wait at least 5 seconds before retrying. Do NOT retry immediately. After 3 failures, stop and tell the user to set `RWA_RPC_URL`.
-- **Batch quotes**: Use a sequential loop (NO `&`):
+- **Quote requires AMOUNT**: `rwa --json gm quote <SYMBOL> <AMOUNT>`. Amount is mandatory (USDC for buy, tokens for sell).
+- **Batch quotes**: Use a sequential loop (NO `&`). Amount is required:
   ```bash
-  for sym in TSLA AAPL NVDA SPY; do echo "$sym: $(rwa --json gm quote $sym 100 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'${d.get(\"output_usd\", d.get(\"out_amount\", \"?\"))}')" 2>/dev/null || echo 'N/A')"; sleep 2; done
+  for sym in TSLA AAPL NVDA SPY; do rwa --json gm quote $sym 100 2>/dev/null; sleep 2; done
   ```
-- **Find tokens**: Use `rwa --json gm list --search <keyword>` instead of piping through Python. NEVER parse the full list with custom scripts.
-- **Buy multiple**: Chain buys sequentially with sleep:
+- **Batch history**: Sequential loop (NO `&`):
+  ```bash
+  for sym in TSLA AAPL NVDA; do rwa --json gm history $sym -r 1W 2>/dev/null; sleep 2; done
+  ```
+- **Find tokens**: Use `rwa --json gm list --search <keyword>`. NEVER dump full list without `--search`.
+- **Buy multiple**: Sequential with sleep:
   ```bash
   rwa gm buy TSLA 100 -y && sleep 5 && rwa gm buy AAPL 100 -y && sleep 5 && rwa gm buy NVDA 100 -y
   ```
-- **Sell multiple**: Same — sequential with sleep:
+- **Sell multiple**: Sequential with sleep:
   ```bash
   rwa gm sell TSLA all -y && sleep 5 && rwa gm sell AAPL all -y && sleep 5 && rwa gm sell NVDA all -y
   ```

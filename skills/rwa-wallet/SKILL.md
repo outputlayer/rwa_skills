@@ -26,10 +26,7 @@ cargo install --git https://github.com/outputlayer/rwa_cli --bin rwa
 
 Verify: `rwa --version`
 
-If `rwa` not found after install, set PATH once per session (do NOT repeat on every command):
-```bash
-export PATH="$HOME/.cargo/bin:$PATH"
-```
+If `rwa` not found after install, restart your terminal or run `source ~/.zshrc`.
 
 ## Wallet Commands
 
