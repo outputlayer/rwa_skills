@@ -153,6 +153,14 @@ The CLI enforces these checks automatically, but agents should verify upfront to
 3. **Has USDC for buys**: portfolio must show `usdc >= buy amount`
 4. **Market is open**: `rwa --json gm hours` must return `"status":"OPEN"`
 
+### CRITICAL: send vs sell
+
+- `rwa gm sell` — sells tokens for USDC (swap via Jupiter)
+- `rwa gm send` — transfers tokens/USDC/SOL to another wallet (no swap)
+- `send USDC all` sends **ALL USDC** in the wallet, not just recent sell proceeds
+- **When user says "sell X% and send proceeds"**: calculate the USDC amount from sell results and use `send USDC <exact_amount>`, NEVER `send USDC all`
+- **To sell all and send**: use `rwa --json gm close-all -y`, then `send USDC <amount_from_close_all_total_usdc>`
+
 **Recommended agent flow before any trade:**
 ```bash
 # Step 1: Verify wallet
