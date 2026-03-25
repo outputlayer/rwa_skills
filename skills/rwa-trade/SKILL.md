@@ -29,8 +29,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 - **Batch quotes**: To compare prices, run a loop — never quote one stock at a time with separate tool calls:
   ```bash
   for sym in TSLA AAPL NVDA SPY; do echo "$sym: $(rwa --json gm quote $sym 100 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'${d.get(\"output_usd\", d.get(\"out_amount\", \"?\"))}')" 2>/dev/null || echo 'N/A')"; done
-  ```
-- **Buy multiple**: Chain buys in one command:
+  ```- **Find tokens**: Use `rwa --json gm list --search <keyword>` instead of piping through Python. NEVER parse the full list with custom scripts.- **Buy multiple**: Chain buys in one command:
   ```bash
   rwa gm buy TSLA 100 -y && rwa gm buy AAPL 100 -y && rwa gm buy NVDA 100 -y
   ```
@@ -56,9 +55,13 @@ rwa --json gm hours
 ### 2. Find Tokens
 
 ```bash
-rwa --json gm list       # All 264 tokens
+rwa --json gm list                # All 264 tokens
+rwa --json gm list --search oil    # Filter by keyword (searches symbol + name)
+rwa --json gm list --search defense
+rwa --json gm list --search etf
 ```
 
+JSON output includes `type` ("stock" or "etf") and cleaned company name.
 Both `TSLA` and `TSLAon` symbol formats accepted.
 
 ### 3. Get a Quote
@@ -98,6 +101,10 @@ rwa gm sell SPY 50% -y        # Sell half
 - "Insufficient USDC" → send USDC to wallet before buying
 - "Balance is 0 — nothing to trade" → wallet has no tokens to sell
 - "Minimum buy amount is 1.0 USDC" → amount too small
+- "Swap failed (code -2005)" → Jupiter internal error. CLI retries once automatically. If it still fails, try a different amount or try again later. Do NOT retry more than once manually.
+- "Swap failed (code -2002)" → route expired. CLI retries once. Try again.
+- "Swap failed (code -2003)" → slippage exceeded — market volatility, try smaller amount
+- "Jupiter API error (HTTP 429)" → rate limited. Wait 5s, try again. Never run parallel quotes.
 
 ## Safety — Pre-Trade Checklist
 
