@@ -6,7 +6,6 @@ description: >
   or list available tokens. Triggers: "buy TSLA", "sell stocks", "trade RWA",
   "quote NVDA", "market hours", "list tokens", "what can I buy on Solana".
 compatibility: Requires network access and the rwa CLI (auto-installed on first use). Works on macOS and Linux.
-allowed-tools: Bash(rwa:*) Bash(curl:*) Read
 metadata:
   author: outputlayer
   version: "1.0"
