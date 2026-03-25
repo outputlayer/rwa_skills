@@ -60,12 +60,20 @@ Do NOT prepend `export PATH=...` to every command. The installer adds rwa to PAT
 
 ## Workflow
 
-### 1. Check Market Hours
+### 1. Check Market Session
 
-Trading is 24/5: Sunday 8 PM — Friday 8 PM ET.
+Trading is 24/5 across 4 sessions (all times ET):
+- **Pre-Market**: 4:00 AM – 9:29 AM
+- **Regular**: 9:30 AM – 3:59 PM
+- **Post-Market**: 4:00 PM – 7:59 PM
+- **Overnight**: 8:00 PM – 3:59 AM
+- **Closed**: Fri 8 PM – Sun 8 PM
+
+Not all tokens are tradable in every session. Use `--tradable` to see which tokens can be traded now.
 
 ```bash
-rwa --json gm hours
+rwa --json gm hours              # Current session + tradable count
+rwa --json gm hours --tradable   # Full list of tradable tokens
 ```
 
 ### 2. Find Tokens
@@ -81,7 +89,7 @@ rwa --json gm list --search amgen       # Search by company name
 ```
 
 Only use `rwa --json gm list` (no filter) if the user explicitly asks for all tokens.
-JSON output includes `type` ("stock" or "etf"), `sector` (e.g. "Technology", "Healthcare"), and cleaned company name.
+JSON output includes `type` ("stock" or "etf"), `sector` (e.g. "Technology", "Healthcare"), `tradable` (true/false for current session), and cleaned company name.
 Both `TSLA` and `TSLAon` symbol formats accepted.
 
 Available sectors: Technology, Healthcare, Financials, Consumer Discretionary, Energy, Industrials, Materials, Utilities, Real Estate Sector, Infrastructure.
@@ -114,9 +122,11 @@ rwa --json gm close-all 50% -y      # Sell 50% of every position
 rwa --json gm close-all 10% -y      # Sell 10% of every position
 ```
 
-JSON output includes `sold` (successful sells) and `failed` (skipped tokens):
+Positions worth less than **$1** are automatically skipped (Jupiter rejects small swaps).
+
+JSON output includes `sold`, `failed`, and `skipped` (positions below $1):
 ```json
-{"status":"success","sold":[{"token":"TSLAon","amount":"0.25","usdc":"96.50","tx":"https://solscan.io/tx/..."}],"failed":[],"total_usdc":"96.50"}
+{"status":"success","sold":[{"token":"TSLAon","amount":"0.25","usdc":"96.50","tx":"https://solscan.io/tx/..."}],"failed":[],"skipped":[{"token":"UNPon","estimated_usd":0.45,"reason":"below $1 minimum"}],"total_usdc":"96.50"}
 ```
 
 **ALWAYS use `close-all` instead of selling tokens one by one.** The CLI handles retries, delays, and error skipping internally.
@@ -138,7 +148,7 @@ JSON output includes `sold` (successful sells) and `failed` (skipped tokens):
 {"input":"USDC","output":"TSLAon","in_amount":100.0,"out_amount":0.26,"price":385.0}
 
 // rwa --json gm list --search tsla
-[{"symbol":"TSLAon","name":"Tesla","type":"stock","sector":"Consumer Discretionary"}]
+[{"symbol":"TSLAon","name":"Tesla","type":"stock","sector":"Consumer Discretionary","tradable":true}]
 ```
 
 ## Errors & What To Do
@@ -147,7 +157,7 @@ The CLI has built-in retry logic (max 2 retries with fresh orders). Most transie
 
 | Error | Cause | Agent action |
 |-------|-------|-------------|
-| "market closed" | Trading hours ended | Run `rwa --json gm hours`, tell user when it opens |
+| "market closed" | Trading session ended | Run `rwa --json gm hours`, tell user current session and when it opens |
 | "Solana RPC unavailable" | Rate-limited or down | Wait 5s, retry once. After 3 failures, tell user to set `RWA_RPC_URL` |
 | "No wallet found" | No keypair | Run `rwa keys generate` |
 | "Insufficient SOL for gas" | SOL < 0.01 | CLI auto-topups from USDC. If still fails, user needs to send SOL |
@@ -170,7 +180,7 @@ The CLI enforces these checks automatically, but agents should verify upfront to
 1. **Wallet exists**: `rwa keys show` — if fails, run `rwa keys generate` first
 2. **Has SOL for gas**: portfolio must show `sol >= 0.005`
 3. **Has USDC for buys**: portfolio must show `usdc >= buy amount`
-4. **Market is open**: `rwa --json gm hours` must return `"status":"OPEN"`
+4. **Market is open**: `rwa --json gm hours` — check `session` is not `"Closed"`
 
 ### CRITICAL: send vs sell
 
