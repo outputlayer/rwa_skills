@@ -82,7 +82,7 @@ rwa --json gm list --search amgen       # Search by company name
 ```
 
 Only use `rwa --json gm list` (no filter) if the user explicitly asks for all tokens.
-JSON output includes `type` ("stock" or "etf"), `sector` (e.g. "Technology", "Healthcare"), and cleaned company name.
+JSON output includes `type` ("stock" or "etf"), `sector` (e.g. "Technology", "Healthcare"), cleaned company name, and `tradable` (true/false for current session).
 Both `TSLA` and `TSLAon` symbol formats accepted.
 
 Available sectors: Technology, Healthcare, Financials, Consumer Discretionary, Energy, Industrials, Materials, Utilities, Real Estate Sector, Infrastructure.
@@ -117,12 +117,12 @@ rwa --json gm reclaim --token TSLA   # Close only empty TSLA accounts
 
 JSON output:
 ```json
-{"status":"success","accounts_closed":5,"sol_reclaimed":"0.010196400","signatures":["https://solscan.io/tx/..."]}
+{"status":"success","accounts_closed":5,"sol_reclaimed":"0.010196400","signatures":["5K1z..."]}
 ```
 
 Note: USDC token account is preserved (never closed) since it's needed for trading.
 
-### 5. Close All / Reduce All Positions
+### 6. Close All / Reduce All Positions
 
 Use `close-all` to sell every GM token position. Optionally pass a percentage to sell only a portion of each position.
 
@@ -152,11 +152,17 @@ JSON output includes `sold` (successful sells) and `failed` (skipped tokens):
 ## Key JSON Output
 
 ```json
+// rwa --json gm hours
+{"status":"open","session":"Regular Market","session_hours":"9:30 AM – 3:59 PM ET","now":"Monday 10:30 AM ET","countdown":"next session in 5h 30m","tradable_count":214}
+
 // rwa --json gm quote TSLA 100
-{"input":"USDC","output":"TSLAon","in_amount":100.0,"out_amount":0.26,"price":385.0}
+{"input":"100","input_token":"USDC","output":"0.025844","output_token":"TSLAon","input_usd":100.0,"output_usd":99.6,"slippage_pct":-0.39,"price_impact_pct":-0.39,"fee_bps":10,"tradable":true}
 
 // rwa --json gm list --search tsla
-[{"symbol":"TSLAon","name":"Tesla","type":"stock","sector":"Consumer Discretionary"}]
+[{"symbol":"TSLAon","name":"Tesla","type":"stock","sector":"Consumer Discretionary","tradable":true}]
+
+// rwa --json gm buy TSLA 100 -y
+{"status":"success","amount":"0.258","token":"TSLAon","counter_amount":"100.00","counter_token":"USDC","tx":"https://solscan.io/tx/...","slippage_pct":-0.39}
 ```
 
 ## Errors & What To Do
@@ -189,7 +195,7 @@ The CLI enforces these checks automatically, but agents should verify upfront to
 1. **Wallet exists**: `rwa keys show` — if fails, run `rwa keys generate` first
 2. **Has SOL for gas**: portfolio must show `sol >= 0.005`
 3. **Has USDC for buys**: portfolio must show `usdc >= buy amount`
-4. **Market is open**: `rwa --json gm hours` must return `"status":"OPEN"`
+4. **Market is open**: `rwa --json gm hours` must return `"status":"open"`
 
 ### CRITICAL: send vs sell
 

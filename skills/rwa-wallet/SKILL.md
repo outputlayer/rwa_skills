@@ -36,7 +36,7 @@ If `rwa` not found after install, restart your terminal or run `source ~/.zshrc`
 rwa keys generate
 ```
 
-Creates a new Solana keypair at `~/.config/rwa/id.json`. Outputs the public address and a 12-word seed phrase. **Save the seed phrase** — it cannot be recovered.
+Creates a new Solana keypair at `~/.config/rwa/key.json`. Outputs the public address. The key file is the backup — keep it safe.
 
 ### Import Existing Wallet
 

@@ -34,22 +34,26 @@ rwa --json gm portfolio Dn9EqxugBePrno7gzCjbGeYxY3VJE9RB2WE2FH7t7qmH
 
 ```json
 {
-  "wallet": "Dn9Eqx...",
-  "sol": 19.33,
-  "usdc": 19607.99,
+  "wallet": "5CjgV1...",
+  "sol": 0.0375,
+  "usdc": 95.76,
   "positions": [
     {
       "token": "TSLAon",
-      "balance": 0.26,
-      "price": 385.0,
-      "value_usd": 100.1,
+      "balance": 0.2584,
+      "price": 385.75,
+      "value_usd": 99.72,
       "alloc_pct": 15.2,
       "change_pct_24h": 1.2
     }
   ],
-  "total_value_usd": 26612.0
+  "total_value_usd": 656.12,
+  "change_24h_usd": 3.45,
+  "change_24h_pct": 0.53
 }
 ```
+
+All floats are rounded for token efficiency: prices/USD to 2dp, balances to 4dp.
 
 Fields: `token`, `balance`, `price`, `value_usd`, `alloc_pct` (% of portfolio), `change_pct_24h`.
 
@@ -69,7 +73,7 @@ rwa --json gm history TSLA -r ALL       # All time
 
 ```json
 {
-  "symbol": "TSLAON",
+  "symbol": "TSLAon",
   "range": "1M",
   "candles": 527,
   "first": {"timestamp": 1708819200, "price": 407.04},
