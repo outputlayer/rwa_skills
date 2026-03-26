@@ -1,135 +1,51 @@
 ---
 name: rwa-wallet
 description: >
-  Set up and manage Solana wallets for trading tokenized stocks via the rwa CLI.
-  Use when user asks about wallet setup, key generation, importing seed phrase,
-  showing wallet address, installing the rwa CLI, or sending/withdrawing funds.
-  Triggers: "create wallet", "generate keys", "import seed phrase",
-  "show address", "install rwa", "fund wallet", "setup trading",
-  "send SOL", "send USDC", "withdraw", "transfer tokens".
+  Set up Solana wallets and transfer funds for trading tokenized stocks via rwa CLI.
+  Triggers: "create wallet", "generate keys", "import seed phrase", "show address",
+  "install rwa", "fund wallet", "send SOL", "send USDC", "withdraw", "transfer",
+  "reclaim rent", "close accounts".
 ---
 
-# RWA Wallet
-
-Create and manage Solana wallets for trading tokenized stocks.
-
-## Install CLI
+# Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
 ```
 
-Or from source (requires Rust 1.91+):
-```bash
-cargo install --git https://github.com/outputlayer/rwa_cli --bin rwa
-```
+Or: `cargo install --git https://github.com/outputlayer/rwa_cli --bin rwa`
 
-Verify: `rwa --version`
-
-If `rwa` not found after install, restart your terminal or run `source ~/.zshrc`.
-
-## Wallet Commands
-
-### Generate New Wallet
+# Wallet
 
 ```bash
-rwa keys generate
+rwa keys generate                                    # Create new keypair (~/.config/rwa/key.json)
+rwa keys import --seed-phrase "word1 word2 ... word12"  # Import from mnemonic
+rwa keys import --private-key <BASE58>               # Import from private key
+rwa keys import --file <PATH>                        # Import from key file
+rwa keys show                                        # Show address + key path
 ```
 
-Creates a new Solana keypair at `~/.config/rwa/key.json`. Outputs the public address. The key file is the backup — keep it safe.
+Fund wallet with SOL (for fees) + USDC (for trading) at the address from `rwa keys show`.
 
-### Import Existing Wallet
+# Send / Withdraw
 
 ```bash
-rwa keys import --seed-phrase "word1 word2 ... word12"
+rwa --json gm send SOL 1.5 <ADDR> -y     # Send exact SOL
+rwa --json gm send SOL all <ADDR> -y     # Send max SOL (auto-reserves tx fee from RPC)
+rwa --json gm send USDC 100 <ADDR> -y    # Send exact USDC
+rwa --json gm send USDC all <ADDR> -y    # Send full USDC balance (raw precision)
+rwa --json gm send TSLA 0.5 <ADDR> -y   # Send GM tokens (Token-2022)
 ```
 
-### Show Wallet Info
+After selling: use exact USDC amount from sell result, not `send USDC all`.
+
+# Reclaim rent
 
 ```bash
-rwa keys show
+rwa --json gm reclaim                    # Close all empty token accounts
+rwa --json gm reclaim --token TSLA       # Close only for specific token
 ```
 
-Outputs: public address + key file path.
+# RPC
 
-## Funding
-
-Before trading, fund the wallet with:
-- **SOL** — for transaction fees (~0.01 SOL per swap)
-- **USDC** — for buying tokens (mint: `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`)
-
-Send SOL and USDC to the wallet address shown by `rwa keys show`.
-
-## RPC Configuration
-
-Default: public Solana RPC (rate-limited). For better reliability:
-
-```bash
-# Environment variable (persistent)
-export RWA_RPC_URL=https://your-rpc-provider.com
-
-# Or per-command flag
-rwa --rpc-url https://your-rpc-provider.com --json gm portfolio
-```
-
-Free RPC providers: [Helius](https://helius.dev/), [QuickNode](https://quicknode.com/), [Alchemy](https://alchemy.com/)
-
-## Security
-
-- Wallet key stored at `~/.config/rwa/id.json` with `0600` permissions (Unix)
-- Never output private keys or seed phrases
-- Keep seed phrase backed up offline
-
-## Send / Withdraw
-
-Transfer SOL, USDC, or GM tokens to another Solana address.
-
-```bash
-# Send SOL
-rwa gm send SOL 1.5 <RECIPIENT_ADDRESS> -y
-
-# Send USDC
-rwa gm send USDC 100 <RECIPIENT_ADDRESS> -y
-
-# Send GM tokens (Token-2022)
-rwa gm send TSLA 0.5 <RECIPIENT_ADDRESS> -y
-
-# Send all USDC
-rwa gm send USDC all <RECIPIENT_ADDRESS> -y
-
-# Send 50% of SOL
-rwa gm send SOL 50% <RECIPIENT_ADDRESS> -y
-```
-
-### JSON Output
-
-```json
-{"status":"success","token":"USDC","amount":"100.00","recipient":"Dn9E...","tx":"https://solscan.io/tx/..."}
-```
-
-### Errors
-
-- "Cannot send to yourself" → use a different recipient
-- "Insufficient SOL for gas" → need ≥0.005 SOL
-- "Balance is 0" → nothing to send
-- Recipient ATA is auto-created if it doesn't exist
-
-## Reclaim Rent
-
-Close empty token accounts to reclaim SOL rent (~0.002 SOL per account). Useful after selling all positions.
-
-```bash
-# Reclaim all empty token accounts
-rwa --json gm reclaim
-
-# Reclaim only for a specific token
-rwa --json gm reclaim --token TSLA
-```
-
-### JSON Output
-
-```json
-{"status":"success","accounts_closed":3,"sol_reclaimed":"0.006117840","signatures":["5K1z..."]}
-```
-
-Note: USDC token account is never closed — it's preserved for trading.
+Default: public Solana RPC. For reliability: `export RWA_RPC_URL=https://your-rpc.com`
