@@ -1,10 +1,10 @@
 # RWA Skills
 
-A collection of [Agent Skills](https://agentskills.io/) for trading tokenized stocks & ETFs on Solana via the [rwa CLI](https://github.com/outputlayer/rwa_cli).
+[Agent Skills](https://agentskills.io/) for trading tokenized stocks & ETFs on Solana via the [rwa CLI](https://github.com/outputlayer/rwa_cli).
 
-Skills are reusable capabilities for AI coding agents. They provide procedural knowledge that helps agents trade tokenized stocks, check portfolios, manage wallets, and more using Ondo Global Markets on Solana.
+## Quick Start
 
-## Quick Start — copy this to any AI agent
+Copy this to any AI agent:
 
 ```
 I'd like to trade tokenized stocks on Solana.
@@ -14,66 +14,30 @@ First install the CLI: curl -fsSL https://raw.githubusercontent.com/outputlayer/
 Then if npm is available, install skills: npx skills add outputlayer/rwa_skills -g -y
 ```
 
-The agent will install the tools, create a wallet, and guide you through your first trade.
+## Install
 
-## Installing
-
-These skills work with any agent that supports the [Agent Skills](https://agentskills.io/) standard.
-
-### npx skills
-
-Install using the [npx skills](https://skills.sh/) CLI:
-
-```
+```bash
 npx skills add outputlayer/rwa_skills -g -y
 ```
 
-### Cursor
+**Cursor:** Settings → Rules → Add Rule → Remote Rule → `outputlayer/rwa_skills`
 
-Add via Settings → Rules → Add Rule → Remote Rule (GitHub) with `outputlayer/rwa_skills`.
-
-### Manual install
-
-Clone this repo and copy the skill folders into the appropriate directory for your agent:
-
-| Agent | Directory | Docs |
-|-------|-----------|------|
-| Claude Code | `~/.claude/skills/` | [docs](https://docs.anthropic.com/en/docs/claude-code) |
-| Cursor | `~/.cursor/skills/` | [docs](https://docs.cursor.com) |
-| OpenCode | `~/.config/opencode/skills/` | [docs](https://opencode.ai) |
-| OpenAI Codex | `~/.codex/skills/` | [docs](https://openai.com/codex) |
+**Manual:** Clone and copy skill folders to your agent's skills directory (`~/.claude/skills/`, `~/.cursor/skills/`, etc.)
 
 ## Skills
 
-Skills are contextual and auto-loaded based on your conversation. Only the relevant skill is loaded — keeping context lean.
+| Skill | Description |
+|-------|-------------|
+| **rwa-trade** | Buy/sell stocks, quotes, market hours, close-all |
+| **rwa-portfolio** | Holdings, P&L, allocation, price history |
+| **rwa-wallet** | Wallet setup, send/withdraw, reclaim rent |
 
-| Skill | Description | Triggers |
-|-------|-------------|----------|
-| **rwa-trade** | Buy/sell tokenized stocks, get quotes, check market hours, list tokens, close all / reduce positions | "buy TSLA", "sell stocks", "close all", "reduce 50%", "quote", "market hours" |
-| **rwa-portfolio** | View holdings, P&L, allocation, price history | "portfolio", "holdings", "price history" |
-| **rwa-wallet** | Create/import wallets, install CLI, send/withdraw funds | "create wallet", "import keys", "install rwa", "send USDC" |
+## Links
 
-## Skill Structure
-
-Each skill follows the [Agent Skills specification](https://agentskills.io/specification):
-
-```
-skill-name/
-├── SKILL.md           # Required. Instructions for the agent (with YAML frontmatter)
-├── references/        # Optional. Supporting documentation loaded on demand
-└── assets/            # Optional. Static resources
-```
-
-- `SKILL.md` — The entry point. Contains YAML frontmatter and markdown instructions.
-- `references/` — Detailed docs loaded only when needed, keeping context usage efficient.
-
-## Resources
-
-- [RWA CLI](https://github.com/outputlayer/rwa_cli) — the CLI tool
-- [Ondo Finance](https://ondo.finance/) — Ondo Global Markets
-- [Jupiter](https://jup.ag/) — Solana DEX aggregator
-- [Agent Skills Specification](https://agentskills.io/specification)
+- [RWA CLI](https://github.com/outputlayer/rwa_cli)
+- [Ondo Global Markets](https://ondo.finance/)
+- [Agent Skills Spec](https://agentskills.io/specification)
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT
