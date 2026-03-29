@@ -4,14 +4,23 @@
 
 ## Quick Start
 
-Copy this to any AI agent:
+Best setup for an agent:
+
+```bash
+# 1. Install the CLI
+curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
+
+# 2. Install the skills
+npx skills add outputlayer/rwa_skills -g -y
+```
+
+Then tell the agent the task directly:
 
 ```
-I'd like to trade tokenized stocks on Solana.
-
-First install the CLI: curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
-
-Then if npm is available, install skills: npx skills add outputlayer/rwa_skills -g -y
+Buy $100 of TSLA
+Show my portfolio
+Create an encrypted wallet
+Sell everything and withdraw
 ```
 
 ## Install
@@ -28,9 +37,17 @@ npx skills add outputlayer/rwa_skills -g -y
 
 | Skill | Description |
 |-------|-------------|
-| **rwa-trade** | Buy/sell stocks, quotes, market hours, close-all |
+| **rwa-trade** | Buy/sell, dry-run previews, market hours, bulk buy, close-all |
 | **rwa-portfolio** | Holdings, P&L, allocation, price history |
-| **rwa-wallet** | Wallet setup, send/withdraw, reclaim rent |
+| **rwa-wallet** | Wallet setup, encryption, send/withdraw, reclaim rent |
+
+## Design goals
+
+- Short decision rules for agents
+- Prefer `rwa --json` everywhere
+- Favor the cheapest useful command first
+- Avoid parallel wallet-changing commands
+- Encode bulk-buy and bulk-sell best practices directly in the skills
 
 ## Links
 

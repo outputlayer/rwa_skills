@@ -2,117 +2,142 @@
 name: rwa-trade
 description: >
   Buy and sell tokenized stocks & ETFs on Solana via the rwa CLI.
-  Triggers: "buy TSLA", "sell AAPL", "preview trade", "market hours",
-  "list tokens", "close all positions", "sell everything", "reduce portfolio",
-  "is TSLA tradable", "dry run".
+  Triggers: "buy TSLA", "sell AAPL", "market hours", "list tokens",
+  "is TSLA tradable", "bulk buy", "basket", "close all positions",
+  "sell everything", "dry run".
 ---
 
 # Rules
 
-- **NEVER run commands in parallel (`&`)** — Jupiter rejects concurrent requests from the same wallet
-- Always use `--json -y` flags for buy/sell/send
-- `sleep 3` between consecutive commands
-- Use `close-all` for multiple sells (never sell one-by-one manually)
-- `send` transfers tokens to another wallet; `sell` swaps for USDC — different commands
-- CLI auto-retries swap errors (max 2×) — do NOT retry manually
+- Always use `rwa --json` for agent calls
+- Use `-y` only for real execution, never for `--dry-run`
+- Never run wallet-changing commands in parallel
+- Sleep `3` seconds between consecutive buy/sell/close-all/send commands
+- There is no `quote` command: use `buy/sell --dry-run`
+- For many sells, prefer `close-all` over manual loops
+- Do not manually retry swap failures; the CLI already retries
 
-# Commands
+# Shortest path
+
+- User gave exact symbol + amount: run `buy` or `sell` directly
+- User wants a preview: run `buy/sell --dry-run`
+- User asks if one token is tradable: use `list --search <SYM>` not `hours --tradable`
+- User asks what is tradable now: use `hours --tradable`
+- User asks what to sell: use `portfolio` first, then sell/close-all
+- User wants to exit everything: `close-all` -> `reclaim` -> `send`
+
+# Core commands
 
 ```bash
-rwa --json gm hours                       # Session status + tradable count
-rwa --json gm hours --tradable            # List all tradable symbols now
-rwa --json gm list --search <keyword>     # Search by symbol / name / sector
+rwa --json gm hours
+rwa --json gm hours --tradable
+rwa --json gm list --search <keyword>
 
-rwa --json gm buy TSLA 100 -y            # Buy with USDC
-rwa --json gm buy TSLA 100 --dry-run     # Preview: validate + quote, no execution
-rwa --json gm sell TSLA all -y           # Sell (exact, 50%, or all)
-rwa --json gm sell TSLA all --dry-run    # Preview sell
-rwa --json gm close-all -y              # Sell ALL positions sequentially
-rwa --json gm close-all 50% -y          # Sell 50% of every position
-rwa --json gm close-all --dry-run       # Preview what would be sold
-rwa --json gm reclaim                    # Close empty accounts, reclaim SOL rent
-```
-
-# --dry-run output (JSON)
-
-`buy/sell --dry-run` validates balance + tradability and returns the full quote without executing:
-
-```json
-{
-  "status": "dry_run",
-  "amount": "1.234567890",
-  "token": "TSLAon",
-  "counter_amount": "100.00",
-  "counter_token": "USDC",
-  "tx": "",
-  "slippage_pct": 0.1234,
-  "price_impact_pct": 0.0012,
-  "fee_bps": 25,
-  "gasless": true,
-  "router": "jupiterz"
-}
+rwa --json gm buy TSLA 100 --dry-run
+rwa --json gm buy TSLA 100 -y
+rwa --json gm sell TSLA 50% --dry-run
+rwa --json gm sell TSLA 50% -y
+rwa --json gm close-all --dry-run
+rwa --json gm close-all -y
+rwa --json gm close-all 50% -y
+rwa --json gm reclaim
 ```
 
 # Amounts
 
-Exact: `100` | Percentage: `50%` | All: `all`
+Exact: `100`
 
-# Buying multiple tokens (basket)
+Percentage: `50%`
 
-No multi-buy command — run sequentially with `&&` (stops chain on failure):
+All: `all`
+
+Inputs with too many decimal places are rejected. Do not round manually.
+
+# Bulk buy
+
+Best practice:
+
+- If the user already knows symbols and amounts, skip discovery calls
+- For 2-3 small known buys, execute sequentially
+- For larger or uncertain buys, dry-run each one first
+- Never use `&`; use sequential commands only
+
+Example execute:
 
 ```bash
-rwa --json gm buy TSLA 100 -y && sleep 3 && \
-rwa --json gm buy AAPL 150 -y && sleep 3 && \
+rwa --json gm buy TSLA 100 -y
+sleep 3
+rwa --json gm buy AAPL 150 -y
+sleep 3
 rwa --json gm buy NVDA 200 -y
 ```
 
-Preview all first (no execution, no `-y` needed):
+Example preview-first:
+
 ```bash
-rwa --json gm buy TSLA 100 --dry-run && \
-rwa --json gm buy AAPL 150 --dry-run && \
+rwa --json gm buy TSLA 100 --dry-run
+rwa --json gm buy AAPL 150 --dry-run
 rwa --json gm buy NVDA 200 --dry-run
 ```
 
-# Sell all + withdraw
+For sector/theme discovery:
+
+1. `rwa --json gm list --search <theme>`
+2. choose symbols
+3. buy sequentially
+
+Do not call `hours --tradable` first unless the user explicitly asked what is tradable right now.
+
+# Bulk sell
+
+- Sell one token: `gm sell`
+- Reduce every position: `gm close-all 25% -y`
+- Exit everything: `gm close-all -y`
+- After exit: `gm reclaim`
+
+Exit workflow:
 
 ```bash
-rwa --json gm close-all -y               # Returns total_usdc
-rwa --json gm reclaim                    # Reclaim SOL rent (~0.002 SOL per empty account)
-rwa --json gm send USDC 83.30 <ADDR> -y  # Use EXACT amount from close-all result
-rwa --json gm send SOL all <ADDR> -y     # Send remaining SOL
+rwa --json gm close-all -y
+rwa --json gm reclaim
+rwa --json gm send USDC all <ADDR> -y
+rwa --json gm send SOL all <ADDR> -y
 ```
 
-# Errors
+If the user wants exact post-liquidation withdrawal, prefer the exact `total_usdc` from `close-all`.
+
+# Dry-run policy
+
+- Use `--dry-run` for large orders
+- Use `--dry-run` when liquidity/tradability is uncertain
+- Skip `--dry-run` for small, explicit, low-risk orders if the user clearly wants execution
+- `--dry-run` is cheaper than a failed execution
+
+# Error handling
 
 | Error | Action |
 |-------|--------|
-| "not tradable in current session" | Skip — check `hours --tradable` |
-| "market closed" | Tell user when it opens |
-| "Quote not available" | No liquidity — skip token |
-| "HTTP 400" / "No swap route" | Running parallel — run sequentially |
-| "Swap failed (code -XXXX)" | CLI auto-retries — do NOT retry manually |
-| "Solana RPC unavailable" | Wait 5s, retry. After 3 fails: ask user to set `RWA_RPC_URL` |
-| ">3% slippage" | Hard-blocked by CLI — token illiquid, skip or try smaller amount |
+| `not tradable in current session` | skip token or show `list --search <SYM>` |
+| `market is closed` | tell user when trading reopens |
+| `No swap route` / `HTTP 400` | likely parallel flow or no liquidity |
+| `Slippage too high` | skip or reduce size |
+| `Solana RPC unavailable` | wait 5s, retry; after repeated failures suggest `RWA_RPC_URL` |
 
-# Token cost per response
+# Token efficiency
 
-| Command | ~Tokens |
-|---------|---------|
-| `hours` | 42 |
-| `hours --tradable` | 439 |
-| `buy/sell --dry-run` | 55 |
-| `buy/sell` (executed) | 250 |
-| `close-all` | 150–400 |
-| `list --search` | 50–400 |
-| `portfolio` | 41–300 |
+| Need | Cheapest useful call |
+|------|----------------------|
+| one token status | `list --search TSLA` |
+| market session | `hours` |
+| preview a trade | `buy/sell --dry-run` |
+| everything tradable now | `hours --tradable` |
+| reduce many positions | `close-all <pct>` |
+| full exit | `close-all` |
 
-# Efficient workflows
+# Good patterns
 
-**Check before large order** — `buy TSLA 500 --dry-run` (55 tok) → if ok, `buy TSLA 500 -y` (250 tok)
-
-**Skip dry-run for small confident orders** — `buy TSLA 100 -y` directly saves 55 tokens
-
-**Sector portfolio** — `hours` (42 tok) → `list --search Technology` (~400 tok) → buy each sequentially
-
-**Full liquidation** — `close-all -y` → `reclaim` → `send USDC all` → `send SOL all`
+- Large single order: `buy --dry-run` -> `buy -y`
+- Fast small order: `buy -y`
+- One-token tradability check: `list --search <SYM>`
+- User asks "buy these 5 symbols": no discovery, just sequential dry-run or buy
+- User asks "what can I buy in semiconductors": `list --search semiconductor`

@@ -13,60 +13,81 @@ description: >
 curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
 ```
 
-# Wallet — plaintext
+# Best defaults
+
+- Prefer encrypted wallets for new setups
+- Use `rwa keys show` before asking the user to fund the wallet
+- Use `rwa --json` for send/reclaim when an agent is driving
+- For post-sell withdrawals, prefer exact values from CLI output
+
+# Wallet
 
 ```bash
-rwa keys generate                                       # Create keypair (~/.config/rwa/key.json)
-rwa keys import --seed-phrase "word1 word2 ... word12"  # Import mnemonic
-rwa keys import --private-key <BASE58>                  # Import private key
-rwa keys import --file <PATH>                           # Import from key file
-rwa keys show                                           # Show address + key path
+rwa keys generate
+rwa keys generate --encrypt
+rwa keys import --seed-phrase "word1 ... word12"
+rwa keys import --seed-phrase "word1 ... word12" --encrypt
+rwa keys import --private-key <BASE58>
+rwa keys import --file <PATH>
+rwa keys show
+rwa keys encrypt
+rwa keys decrypt
 ```
 
-Fund with USDC (trading) at address from `rwa keys show`. SOL optional — Jupiter pays gas for swaps.
+# Passphrase
 
-# Wallet — encrypted (age)
-
-```bash
-rwa keys generate --encrypt                             # Create keypair encrypted with passphrase
-rwa keys import --seed-phrase "..." --encrypt           # Import + encrypt immediately
-rwa keys encrypt                                        # Convert existing key.json → key.age
-rwa keys decrypt                                        # Convert key.age → key.json
-```
-
-When `~/.config/rwa/key.age` exists, every command prompts for passphrase automatically.
-Skip the prompt by setting the env var:
+If `~/.config/rwa/key.age` exists, commands prompt for the passphrase.
 
 ```bash
 export RWA_PASSPHRASE="my passphrase"
 rwa --json gm portfolio
 ```
 
-# Send / Withdraw
+# Send / withdraw
 
 ```bash
-rwa --json gm send SOL 1.5 <ADDR> -y      # Send exact SOL
-rwa --json gm send SOL all <ADDR> -y      # Drain SOL (auto-reserves tx fee)
-rwa --json gm send USDC 100 <ADDR> -y     # Send exact USDC
-rwa --json gm send USDC all <ADDR> -y     # Drain USDC (full precision)
-rwa --json gm send TSLA 0.5 <ADDR> -y    # Send GM tokens
-rwa --json gm send USDC 100 <ADDR> --dry-run  # Preview without sending
+rwa --json gm send SOL 1.5 <ADDR> --dry-run
+rwa --json gm send SOL all <ADDR> -y
+rwa --json gm send USDC 100 <ADDR> --dry-run
+rwa --json gm send USDC all <ADDR> -y
+rwa --json gm send TSLA 0.5 <ADDR> -y
 ```
 
-**After selling positions**: use the EXACT USDC amount from sell/close-all result — avoids float precision issues.
+# Shortest path
+
+- Need wallet address: `rwa keys show`
+- New wallet: `rwa keys generate --encrypt`
+- Import existing wallet: `rwa keys import ... --encrypt`
+- Send everything after liquidation: `send USDC all` then `send SOL all`
+- Need rent back after sells: `reclaim`
 
 # Reclaim rent
 
-Empty token accounts lock ~0.002 SOL each. Reclaim after selling:
-
 ```bash
-rwa --json gm reclaim                     # Close all empty token accounts
-rwa --json gm reclaim --token TSLA        # Close only one specific token
+rwa --json gm reclaim
+rwa --json gm reclaim --token TSLA
 ```
 
-# RPC
+Run this after selling or transferring out tokens to recover locked SOL from empty accounts.
 
-Default: public Solana mainnet-beta. For faster/private RPC:
+# Token efficiency
+
+| Need | Cheapest useful call |
+|------|----------------------|
+| wallet address | `keys show` |
+| create wallet | `keys generate --encrypt` |
+| preview transfer | `gm send ... --dry-run` |
+| drain USDC | `gm send USDC all` |
+| drain SOL | `gm send SOL all` |
+| reclaim empty accounts | `gm reclaim` |
+
+# Notes
+
+- `send` moves tokens to another wallet; it does not swap to USDC
+- `send USDC all` uses full on-chain precision
+- `send SOL all` auto-reserves tx fees
+- After `close-all`, use `reclaim` before final `send SOL all`
+- For faster/private RPC, set `RWA_RPC_URL`
 
 ```bash
 export RWA_RPC_URL=https://your-rpc-endpoint.com
