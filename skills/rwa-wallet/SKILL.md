@@ -26,7 +26,7 @@ description: >
 
 | User intent | Preferred command |
 |-------------|-------------------|
-| install CLI | `curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | sh` |
+| install CLI | `curl -fsSL <https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh> \| sh` |
 | create new wallet | `rwa keys generate --encrypt` |
 | import existing wallet | `rwa keys import ... --encrypt` |
 | show wallet address | `rwa keys show` |
