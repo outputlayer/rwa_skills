@@ -15,6 +15,13 @@ description: >
 - After liquidation, run `reclaim` before final `send SOL all`
 - For post-sell withdrawals, prefer exact values from CLI output when available
 
+# JSON / dry-run defaults
+
+- Default to `rwa --json` for send and reclaim flows
+- Use `--dry-run` for `gm send` when previewing a transfer for the user
+- There is no `--dry-run` for `keys` commands; use `keys show` for low-risk inspection
+- Do not use `-y` with `--dry-run`
+
 # Intent -> command
 
 | User intent | Preferred command |
@@ -80,6 +87,30 @@ rwa --json gm send SOL all <ADDR> -y
 rwa --json gm send USDC 100 <ADDR> --dry-run
 rwa --json gm send USDC all <ADDR> -y
 rwa --json gm send TSLA 0.5 <ADDR> -y
+```
+
+# Canonical examples
+
+Create an encrypted wallet, then show the address:
+
+```bash
+rwa keys generate --encrypt
+rwa keys show
+```
+
+Preview then send USDC:
+
+```bash
+rwa --json gm send USDC 100 <ADDR> --dry-run
+rwa --json gm send USDC 100 <ADDR> -y
+```
+
+Withdraw everything after liquidation:
+
+```bash
+rwa --json gm reclaim
+rwa --json gm send USDC all <ADDR> -y
+rwa --json gm send SOL all <ADDR> -y
 ```
 
 # Shortest path

@@ -19,6 +19,13 @@ description: >
 - Preserve the user amount exactly; never round or "normalize" decimals yourself
 - Prefer surfaced error kinds over brittle text matching when interpreting failures
 
+# JSON / dry-run defaults
+
+- Default to `rwa --json` on every trade/list/hours/close-all call
+- Use `--dry-run` for previews, large orders, basket exits, and uncertain liquidity
+- Do not pair `-y` with `--dry-run`
+- For explicit small orders, skip `--dry-run` only when the user clearly wants execution now
+
 # Intent -> command
 
 | User intent | Preferred command |
@@ -65,6 +72,30 @@ rwa --json gm sell TSLA 50% -y
 rwa --json gm close-all --dry-run
 rwa --json gm close-all -y
 rwa --json gm close-all 50% -y
+rwa --json gm reclaim
+```
+
+# Canonical examples
+
+Single-symbol preview then buy:
+
+```bash
+rwa --json gm buy TSLA 100 --dry-run
+rwa --json gm buy TSLA 100 -y
+```
+
+Single-symbol preview then sell:
+
+```bash
+rwa --json gm sell TSLA 50% --dry-run
+rwa --json gm sell TSLA 50% -y
+```
+
+Preview then exit everything:
+
+```bash
+rwa --json gm close-all --dry-run
+rwa --json gm close-all -y
 rwa --json gm reclaim
 ```
 

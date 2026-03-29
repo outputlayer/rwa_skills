@@ -13,6 +13,12 @@ description: >
 - User asks for chart/history: `history`
 - Do not call `list` or `hours` before `portfolio` unless the user asked about market status
 
+# JSON / dry-run defaults
+
+- Default to `rwa --json` for `portfolio` and `history`
+- `portfolio` and `history` are read-only; there is no `--dry-run`
+- If a holdings question turns into a trade, keep the portfolio call in JSON and use `--dry-run` on the later buy/sell step
+
 # Portfolio
 
 ```bash
@@ -45,6 +51,26 @@ rwa --json gm history TSLA -r 1M
 rwa --json gm history TSLA -r 3M
 rwa --json gm history TSLA -r 1Y
 rwa --json gm history TSLA -r ALL
+```
+
+# Canonical examples
+
+Show current holdings:
+
+```bash
+rwa --json gm portfolio
+```
+
+Inspect another wallet:
+
+```bash
+rwa --json gm portfolio <WALLET_ADDR>
+```
+
+Check recent move for one symbol:
+
+```bash
+rwa --json gm history TSLA -r 1D
 ```
 
 # Token efficiency

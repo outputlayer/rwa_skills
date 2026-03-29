@@ -42,12 +42,45 @@ npx skills add outputlayer/rwa_skills -g -y
 
 - Short decision rules for agents
 - Prefer `rwa --json` everywhere
+- Add a canonical example for every common workflow
+- Treat `--dry-run` as the default preview path for state-changing commands
 - Favor the cheapest useful command first
 - Avoid parallel wallet-changing commands
 - Preserve exact CLI amount precision; never manually round inputs
 - Encode bulk-buy and bulk-sell best practices directly in the skills
 - Keep portfolio answers honest about `cash.*` vs `gm_positions.*`; never treat GM totals as full wallet totals
 - Prefer surfaced error kinds like `market_closed`, `not_tradable`, and `slippage_too_high` over brittle string matching
+
+## Canonical examples
+
+Preview then buy:
+
+```bash
+rwa --json gm buy TSLA 100 --dry-run
+rwa --json gm buy TSLA 100 -y
+```
+
+Preview then sell:
+
+```bash
+rwa --json gm sell TSLA 50% --dry-run
+rwa --json gm sell TSLA 50% -y
+```
+
+Portfolio lookup:
+
+```bash
+rwa --json gm portfolio
+```
+
+Withdraw after liquidation:
+
+```bash
+rwa --json gm close-all -y
+rwa --json gm reclaim
+rwa --json gm send USDC all <ADDR> -y
+rwa --json gm send SOL all <ADDR> -y
+```
 
 ## Links
 
