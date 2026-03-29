@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Pre-commit hook: validate markdown and YAML frontmatter in skills
+set -euo pipefail
+
+# Markdown lint (if available)
+if command -v npx &>/dev/null; then
+  npx --yes markdownlint-cli2 "**/*.md" 2>/dev/null || {
+    echo "❌ Markdown lint failed. Run: npx markdownlint-cli2 \"**/*.md\" --fix"
+    exit 1
+  }
+fi
+
+# Validate YAML frontmatter in SKILL.md files
+for skill in skills/*/SKILL.md; do
+  [ -f "$skill" ] || continue
+
+  # Check frontmatter exists
+  if ! head -1 "$skill" | grep -q '^---$'; then
+    echo "❌ $skill: missing YAML frontmatter (must start with ---)"
+    exit 1
+  fi
+
+  # Check required fields
+  if ! grep -q '^name:' "$skill"; then
+    echo "❌ $skill: missing 'name' in frontmatter"
+    exit 1
+  fi
+  if ! grep -q '^description:' "$skill"; then
+    echo "❌ $skill: missing 'description' in frontmatter"
+    exit 1
+  fi
+
+  # Check line count
+  lines=$(wc -l < "$skill" | tr -d ' ')
+  if [ "$lines" -gt 80 ]; then
+    echo "⚠️  $skill: $lines lines (target: <80 for token efficiency)"
+  fi
+done
+
+echo "✅ Pre-commit checks passed"

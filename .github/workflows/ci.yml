@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: "**/*.md"
+
+  validate:
+    name: Validate Skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check YAML frontmatter
+        run: |
+          errors=0
+          for skill in skills/*/SKILL.md; do
+            [ -f "$skill" ] || continue
+            if ! head -1 "$skill" | grep -q '^---$'; then
+              echo "❌ $skill: missing YAML frontmatter"
+              errors=$((errors + 1))
+            fi
+            if ! grep -q '^name:' "$skill"; then
+              echo "❌ $skill: missing 'name' field"
+              errors=$((errors + 1))
+            fi
+            if ! grep -q '^description:' "$skill"; then
+              echo "❌ $skill: missing 'description' field"
+              errors=$((errors + 1))
+            fi
+            lines=$(wc -l < "$skill" | tr -d ' ')
+            if [ "$lines" -gt 80 ]; then
+              echo "⚠️  $skill: $lines lines (target: <80)"
+            fi
+          done
+          if [ "$errors" -gt 0 ]; then
+            echo "Found $errors error(s)"
+            exit 1
+          fi
+          echo "✅ All skills valid"
+
+      - name: Check README table matches skills
+        run: |
+          for dir in skills/*/; do
+            name=$(basename "$dir")
+            if ! grep -q "$name" README.md; then
+              echo "❌ $name not listed in README.md"
+              exit 1
+            fi
+          done
+          echo "✅ README.md lists all skills"
