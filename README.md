@@ -7,10 +7,7 @@
 Best setup for an agent:
 
 ```bash
-# 1. Install the CLI
-curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
-
-# 2. Install the skills
+curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | sh
 npx skills add outputlayer/rwa_skills -g -y
 ```
 
@@ -47,7 +44,9 @@ npx skills add outputlayer/rwa_skills -g -y
 - Prefer `rwa --json` everywhere
 - Favor the cheapest useful command first
 - Avoid parallel wallet-changing commands
+- Preserve exact CLI amount precision; never manually round inputs
 - Encode bulk-buy and bulk-sell best practices directly in the skills
+- Keep portfolio answers honest about GM positions vs separate cash balances
 
 ## Links
 

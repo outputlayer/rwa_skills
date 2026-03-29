@@ -19,7 +19,7 @@ description: >
 
 | User intent | Preferred command |
 |-------------|-------------------|
-| install CLI | `curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash` |
+| install CLI | `curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | sh` |
 | create new wallet | `rwa keys generate --encrypt` |
 | import existing wallet | `rwa keys import ... --encrypt` |
 | show wallet address | `rwa keys show` |
@@ -46,7 +46,7 @@ description: >
 # Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | sh
 ```
 
 # Wallet commands
@@ -89,6 +89,7 @@ rwa --json gm send TSLA 0.5 <ADDR> -y
 - Import wallet -> `rwa keys import ... --encrypt`
 - Withdraw everything after liquidation -> `send USDC all`, then `send SOL all`
 - Recover locked SOL -> `reclaim`
+- Pure transfer flow -> go straight to `gm send`; do not call `portfolio` unless the user asked about holdings
 
 # Reclaim rent
 
@@ -123,6 +124,7 @@ rwa --json gm send SOL all <ADDR> -y
 
 - `send USDC all` uses full on-chain precision
 - `send SOL all` auto-reserves tx fees
+- The install script prefers a release binary and falls back to source install
 - For faster/private RPC, set `RWA_RPC_URL`
 
 ```bash

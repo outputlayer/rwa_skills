@@ -32,6 +32,8 @@ Returns:
 
 Use `positions[].balance`, `value_usd`, `alloc_pct`, and `change_pct_24h` to answer most follow-ups without extra calls.
 
+Important: `sol` and `usdc` are separate cash balances. Current `total_value_usd`, `change_24h_usd`, `change_24h_pct`, and `positions[].alloc_pct` cover GM positions only.
+
 # Price history
 
 ```bash
@@ -60,9 +62,11 @@ rwa --json gm history TSLA -r ALL
 - "What should I sell?" -> `portfolio`, inspect `value_usd` and `change_pct_24h`
 - "Show my allocation" -> `portfolio` only
 - "Show price action today" -> `history -r 1D`
+- "What is my full wallet worth?" -> `portfolio`, then explain that cash is separate from GM totals
 
 # Notes
 
 - `portfolio` is the best first call for almost every holdings question
 - `history -r 1D` is much cheaper than `ALL`
 - Avoid repeated `history` calls for many symbols unless the user explicitly wants them
+- Do not describe `alloc_pct` as total wallet allocation when large `USDC`/`SOL` cash balances matter

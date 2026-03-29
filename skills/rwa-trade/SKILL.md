@@ -16,6 +16,7 @@ description: >
 - There is no `quote` command; use `buy/sell --dry-run`
 - Do not manually retry swap failures; the CLI already retries
 - For many sells, prefer `close-all` over manual sell loops
+- Preserve the user amount exactly; never round or "normalize" decimals yourself
 
 # Intent -> command
 
@@ -39,6 +40,7 @@ description: >
 - Use `list --search <SYM>` for one-token tradability checks
 - Use `portfolio` first when the user asks what to sell
 - Use `close-all` when the user wants to sell many positions
+- Use `close-all --dry-run` when previewing a full or partial basket exit
 
 # Don't
 
@@ -133,6 +135,7 @@ If the user wants exact USDC withdrawal after liquidation, prefer the exact `tot
 - Use `--dry-run` when tradability or liquidity is uncertain
 - Skip `--dry-run` for small explicit orders when the user clearly wants execution
 - `--dry-run` is cheaper than a failed execution
+- After a real `close-all`, prefer returned `total_usdc` over any preview estimate
 
 # Error recovery
 
