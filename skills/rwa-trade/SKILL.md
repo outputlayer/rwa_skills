@@ -7,26 +7,48 @@ description: >
   "sell everything", "dry run".
 ---
 
-# Rules
+# Hard rules
 
-- Always use `rwa --json` for agent calls
-- Use `-y` only for real execution, never for `--dry-run`
-- Never run wallet-changing commands in parallel
-- Sleep `3` seconds between consecutive buy/sell/close-all/send commands
-- There is no `quote` command: use `buy/sell --dry-run`
-- For many sells, prefer `close-all` over manual loops
+- Always use `rwa --json` for agent-driven calls
+- Use `-y` only for real execution, never with `--dry-run`
+- Never run buy/sell/send/close-all in parallel
+- Sleep `3` seconds between consecutive state-changing commands
+- There is no `quote` command; use `buy/sell --dry-run`
 - Do not manually retry swap failures; the CLI already retries
+- For many sells, prefer `close-all` over manual sell loops
 
-# Shortest path
+# Intent -> command
 
-- User gave exact symbol + amount: run `buy` or `sell` directly
-- User wants a preview: run `buy/sell --dry-run`
-- User asks if one token is tradable: use `list --search <SYM>` not `hours --tradable`
-- User asks what is tradable now: use `hours --tradable`
-- User asks what to sell: use `portfolio` first, then sell/close-all
-- User wants to exit everything: `close-all` -> `reclaim` -> `send`
+| User intent | Preferred command |
+|-------------|-------------------|
+| market session | `rwa --json gm hours` |
+| what is tradable right now | `rwa --json gm hours --tradable` |
+| check one symbol | `rwa --json gm list --search TSLA` |
+| preview buy | `rwa --json gm buy TSLA 100 --dry-run` |
+| execute buy | `rwa --json gm buy TSLA 100 -y` |
+| preview sell | `rwa --json gm sell TSLA 50% --dry-run` |
+| execute sell | `rwa --json gm sell TSLA 50% -y` |
+| reduce every position | `rwa --json gm close-all 25% -y` |
+| exit everything | `rwa --json gm close-all -y` |
+| reclaim rent after sells | `rwa --json gm reclaim` |
 
-# Core commands
+# Do
+
+- If the user already gave symbol + amount, go straight to `buy` or `sell`
+- Use `--dry-run` for large, uncertain, or user-visible previews
+- Use `list --search <SYM>` for one-token tradability checks
+- Use `portfolio` first when the user asks what to sell
+- Use `close-all` when the user wants to sell many positions
+
+# Don't
+
+- Do not call `hours --tradable` just to check one symbol
+- Do not call `list` before an already-specified buy unless discovery is needed
+- Do not run `&`, `xargs -P`, or parallel command groups
+- Do not manually round amounts
+- Do not replace `close-all` with a manual sell loop unless the user asked for per-token control
+
+# Commands
 
 ```bash
 rwa --json gm hours
@@ -55,14 +77,14 @@ Inputs with too many decimal places are rejected. Do not round manually.
 
 # Bulk buy
 
-Best practice:
+Use this when the user already knows the basket:
 
-- If the user already knows symbols and amounts, skip discovery calls
-- For 2-3 small known buys, execute sequentially
-- For larger or uncertain buys, dry-run each one first
-- Never use `&`; use sequential commands only
+1. skip discovery calls
+2. optionally dry-run each order
+3. buy sequentially
+4. sleep `3` seconds between buys
 
-Example execute:
+Execute directly:
 
 ```bash
 rwa --json gm buy TSLA 100 -y
@@ -72,7 +94,7 @@ sleep 3
 rwa --json gm buy NVDA 200 -y
 ```
 
-Example preview-first:
+Preview-first:
 
 ```bash
 rwa --json gm buy TSLA 100 --dry-run
@@ -80,22 +102,21 @@ rwa --json gm buy AAPL 150 --dry-run
 rwa --json gm buy NVDA 200 --dry-run
 ```
 
-For sector/theme discovery:
+Use discovery only when needed:
 
 1. `rwa --json gm list --search <theme>`
 2. choose symbols
 3. buy sequentially
 
-Do not call `hours --tradable` first unless the user explicitly asked what is tradable right now.
-
 # Bulk sell
 
-- Sell one token: `gm sell`
-- Reduce every position: `gm close-all 25% -y`
-- Exit everything: `gm close-all -y`
-- After exit: `gm reclaim`
+Use this order of preference:
 
-Exit workflow:
+1. one token -> `gm sell`
+2. reduce everything -> `gm close-all <pct>`
+3. full exit -> `gm close-all`
+
+Canonical full-exit workflow:
 
 ```bash
 rwa --json gm close-all -y
@@ -104,40 +125,40 @@ rwa --json gm send USDC all <ADDR> -y
 rwa --json gm send SOL all <ADDR> -y
 ```
 
-If the user wants exact post-liquidation withdrawal, prefer the exact `total_usdc` from `close-all`.
+If the user wants exact USDC withdrawal after liquidation, prefer the exact `total_usdc` from `close-all`.
 
 # Dry-run policy
 
 - Use `--dry-run` for large orders
-- Use `--dry-run` when liquidity/tradability is uncertain
-- Skip `--dry-run` for small, explicit, low-risk orders if the user clearly wants execution
+- Use `--dry-run` when tradability or liquidity is uncertain
+- Skip `--dry-run` for small explicit orders when the user clearly wants execution
 - `--dry-run` is cheaper than a failed execution
 
-# Error handling
+# Error recovery
 
 | Error | Action |
 |-------|--------|
 | `not tradable in current session` | skip token or show `list --search <SYM>` |
 | `market is closed` | tell user when trading reopens |
-| `No swap route` / `HTTP 400` | likely parallel flow or no liquidity |
-| `Slippage too high` | skip or reduce size |
+| `No swap route` / `HTTP 400` | likely no liquidity or accidental parallel flow |
+| `Slippage too high` | reduce size or skip token |
 | `Solana RPC unavailable` | wait 5s, retry; after repeated failures suggest `RWA_RPC_URL` |
 
-# Token efficiency
+# Cheapest useful call
 
-| Need | Cheapest useful call |
-|------|----------------------|
+| Need | Preferred call |
+|------|----------------|
 | one token status | `list --search TSLA` |
 | market session | `hours` |
-| preview a trade | `buy/sell --dry-run` |
-| everything tradable now | `hours --tradable` |
+| all tradable now | `hours --tradable` |
+| preview one trade | `buy/sell --dry-run` |
 | reduce many positions | `close-all <pct>` |
 | full exit | `close-all` |
 
-# Good patterns
+# Canonical patterns
 
 - Large single order: `buy --dry-run` -> `buy -y`
 - Fast small order: `buy -y`
 - One-token tradability check: `list --search <SYM>`
-- User asks "buy these 5 symbols": no discovery, just sequential dry-run or buy
-- User asks "what can I buy in semiconductors": `list --search semiconductor`
+- User says "buy these 5 symbols": no discovery; dry-run or buy sequentially
+- User says "what can I buy in semiconductors": `list --search semiconductor`

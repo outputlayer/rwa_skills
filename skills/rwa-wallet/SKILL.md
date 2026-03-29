@@ -7,20 +7,49 @@ description: >
   "encrypt wallet", "passphrase".
 ---
 
+# Hard rules
+
+- Prefer encrypted wallets for new setups
+- Use `rwa --json` for agent-driven send/reclaim flows
+- `send` transfers assets; it does not sell them
+- After liquidation, run `reclaim` before final `send SOL all`
+- For post-sell withdrawals, prefer exact values from CLI output when available
+
+# Intent -> command
+
+| User intent | Preferred command |
+|-------------|-------------------|
+| install CLI | `curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash` |
+| create new wallet | `rwa keys generate --encrypt` |
+| import existing wallet | `rwa keys import ... --encrypt` |
+| show wallet address | `rwa keys show` |
+| encrypt existing wallet | `rwa keys encrypt` |
+| decrypt wallet | `rwa keys decrypt` |
+| preview transfer | `rwa --json gm send ... --dry-run` |
+| send all USDC | `rwa --json gm send USDC all <ADDR> -y` |
+| send all SOL | `rwa --json gm send SOL all <ADDR> -y` |
+| reclaim empty accounts | `rwa --json gm reclaim` |
+
+# Do
+
+- Use `keys show` before asking the user to fund the wallet
+- Default to encrypted wallet creation/import
+- Use `--dry-run` when previewing transfers for the user
+- Use `send USDC all` and `send SOL all` for “withdraw everything”
+
+# Don't
+
+- Do not tell the agent to “sell” when the real intent is “send”
+- Do not use manual arithmetic for final withdrawal amounts if CLI already returned them
+- Do not skip `reclaim` after `close-all` when the goal is full withdrawal
+
 # Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh | bash
 ```
 
-# Best defaults
-
-- Prefer encrypted wallets for new setups
-- Use `rwa keys show` before asking the user to fund the wallet
-- Use `rwa --json` for send/reclaim when an agent is driving
-- For post-sell withdrawals, prefer exact values from CLI output
-
-# Wallet
+# Wallet commands
 
 ```bash
 rwa keys generate
@@ -55,11 +84,11 @@ rwa --json gm send TSLA 0.5 <ADDR> -y
 
 # Shortest path
 
-- Need wallet address: `rwa keys show`
-- New wallet: `rwa keys generate --encrypt`
-- Import existing wallet: `rwa keys import ... --encrypt`
-- Send everything after liquidation: `send USDC all` then `send SOL all`
-- Need rent back after sells: `reclaim`
+- Need wallet address -> `rwa keys show`
+- New wallet -> `rwa keys generate --encrypt`
+- Import wallet -> `rwa keys import ... --encrypt`
+- Withdraw everything after liquidation -> `send USDC all`, then `send SOL all`
+- Recover locked SOL -> `reclaim`
 
 # Reclaim rent
 
@@ -70,10 +99,10 @@ rwa --json gm reclaim --token TSLA
 
 Run this after selling or transferring out tokens to recover locked SOL from empty accounts.
 
-# Token efficiency
+# Cheapest useful call
 
-| Need | Cheapest useful call |
-|------|----------------------|
+| Need | Preferred call |
+|------|----------------|
 | wallet address | `keys show` |
 | create wallet | `keys generate --encrypt` |
 | preview transfer | `gm send ... --dry-run` |
@@ -81,12 +110,19 @@ Run this after selling or transferring out tokens to recover locked SOL from emp
 | drain SOL | `gm send SOL all` |
 | reclaim empty accounts | `gm reclaim` |
 
+# Canonical withdrawal flow
+
+```bash
+rwa --json gm close-all -y
+rwa --json gm reclaim
+rwa --json gm send USDC all <ADDR> -y
+rwa --json gm send SOL all <ADDR> -y
+```
+
 # Notes
 
-- `send` moves tokens to another wallet; it does not swap to USDC
 - `send USDC all` uses full on-chain precision
 - `send SOL all` auto-reserves tx fees
-- After `close-all`, use `reclaim` before final `send SOL all`
 - For faster/private RPC, set `RWA_RPC_URL`
 
 ```bash
