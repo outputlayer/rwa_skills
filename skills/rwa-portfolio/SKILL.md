@@ -23,16 +23,16 @@ rwa --json gm portfolio <WALLET_ADDR>
 Returns:
 
 - `wallet`
-- `sol`
-- `usdc`
-- `positions[]`
-- `gm_positions_value_usd`
-- `gm_positions_change_24h_usd`
-- `gm_positions_change_24h_pct`
+- `cash.sol`
+- `cash.usdc`
+- `gm_positions.positions[]`
+- `gm_positions.value_usd`
+- `gm_positions.change_24h_usd`
+- `gm_positions.change_24h_pct`
 
-Use `positions[].balance`, `value_usd`, `gm_alloc_pct`, and `change_pct_24h` to answer most follow-ups without extra calls.
+Use `gm_positions.positions[].balance`, `value_usd`, `gm_alloc_pct`, and `change_pct_24h` to answer most follow-ups without extra calls.
 
-Important: `sol` and `usdc` are separate cash balances. GM totals use explicit `gm_*` field names, so they are not mistaken for full wallet totals.
+Important: `cash.*` and `gm_positions.*` are intentionally separate. Do not present `gm_positions.value_usd` as full wallet value when cash balances matter.
 
 # Price history
 
@@ -58,15 +58,16 @@ rwa --json gm history TSLA -r ALL
 
 # Good patterns
 
-- "How much TSLA do I have?" -> `portfolio`, then filter `positions`
-- "What should I sell?" -> `portfolio`, inspect `value_usd` and `change_pct_24h`
+- "How much TSLA do I have?" -> `portfolio`, then filter `gm_positions.positions`
+- "What should I sell?" -> `portfolio`, inspect `gm_positions.positions[].value_usd` and `change_pct_24h`
 - "Show my allocation" -> `portfolio` only
 - "Show price action today" -> `history -r 1D`
-- "What is my full wallet worth?" -> `portfolio`, then explain that cash is separate from GM totals
+- "What is my full wallet worth?" -> `portfolio`, then combine `cash` with `gm_positions` instead of treating GM totals as wallet totals
 
 # Notes
 
 - `portfolio` is the best first call for almost every holdings question
 - `history -r 1D` is much cheaper than `ALL`
 - Avoid repeated `history` calls for many symbols unless the user explicitly wants them
+- Market data errors should be surfaced; do not silently replace broken prices with `0.0`
 - Do not describe `gm_alloc_pct` as total wallet allocation when large `USDC`/`SOL` cash balances matter
