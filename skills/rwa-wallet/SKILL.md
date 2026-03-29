@@ -123,7 +123,7 @@ rwa --json gm send SOL all <ADDR> -y
 # Notes
 
 - `send USDC all` uses full on-chain precision
-- `send SOL all` auto-reserves tx fees
+- `send SOL all` auto-reserves tx fees and now uses exact lamport arithmetic
 - The install script prefers a release binary and falls back to source install
 - For faster/private RPC, set `RWA_RPC_URL`
 

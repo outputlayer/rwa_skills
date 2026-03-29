@@ -26,13 +26,13 @@ Returns:
 - `sol`
 - `usdc`
 - `positions[]`
-- `total_value_usd`
-- `change_24h_usd`
-- `change_24h_pct`
+- `gm_positions_value_usd`
+- `gm_positions_change_24h_usd`
+- `gm_positions_change_24h_pct`
 
-Use `positions[].balance`, `value_usd`, `alloc_pct`, and `change_pct_24h` to answer most follow-ups without extra calls.
+Use `positions[].balance`, `value_usd`, `gm_alloc_pct`, and `change_pct_24h` to answer most follow-ups without extra calls.
 
-Important: `sol` and `usdc` are separate cash balances. Current `total_value_usd`, `change_24h_usd`, `change_24h_pct`, and `positions[].alloc_pct` cover GM positions only.
+Important: `sol` and `usdc` are separate cash balances. GM totals use explicit `gm_*` field names, so they are not mistaken for full wallet totals.
 
 # Price history
 
@@ -69,4 +69,4 @@ rwa --json gm history TSLA -r ALL
 - `portfolio` is the best first call for almost every holdings question
 - `history -r 1D` is much cheaper than `ALL`
 - Avoid repeated `history` calls for many symbols unless the user explicitly wants them
-- Do not describe `alloc_pct` as total wallet allocation when large `USDC`/`SOL` cash balances matter
+- Do not describe `gm_alloc_pct` as total wallet allocation when large `USDC`/`SOL` cash balances matter
