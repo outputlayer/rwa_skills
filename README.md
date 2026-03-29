@@ -47,6 +47,7 @@ npx skills add outputlayer/rwa_skills -g -y
 - Preserve exact CLI amount precision; never manually round inputs
 - Encode bulk-buy and bulk-sell best practices directly in the skills
 - Keep portfolio answers honest about `cash.*` vs `gm_positions.*`; never treat GM totals as full wallet totals
+- Prefer surfaced error kinds like `market_closed`, `not_tradable`, and `slippage_too_high` over brittle string matching
 
 ## Links
 

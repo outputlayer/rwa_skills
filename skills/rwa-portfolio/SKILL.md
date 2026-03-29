@@ -33,6 +33,7 @@ Returns:
 Use `gm_positions.positions[].balance`, `value_usd`, `gm_alloc_pct`, and `change_pct_24h` to answer most follow-ups without extra calls.
 
 Important: `cash.*` and `gm_positions.*` are intentionally separate. Do not present `gm_positions.value_usd` as full wallet value when cash balances matter.
+The old flat top-level `sol`, `usdc`, and `gm_positions_*` fields should be treated as obsolete.
 
 # Price history
 
@@ -70,4 +71,5 @@ rwa --json gm history TSLA -r ALL
 - `history -r 1D` is much cheaper than `ALL`
 - Avoid repeated `history` calls for many symbols unless the user explicitly wants them
 - Market data errors should be surfaced; do not silently replace broken prices with `0.0`
+- Treat `portfolio` JSON as a stable nested contract: `cash.*` plus `gm_positions.*`
 - Do not describe `gm_alloc_pct` as total wallet allocation when large `USDC`/`SOL` cash balances matter

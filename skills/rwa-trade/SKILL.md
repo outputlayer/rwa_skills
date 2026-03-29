@@ -17,6 +17,7 @@ description: >
 - Do not manually retry swap failures; the CLI already retries
 - For many sells, prefer `close-all` over manual sell loops
 - Preserve the user amount exactly; never round or "normalize" decimals yourself
+- Prefer surfaced error kinds over brittle text matching when interpreting failures
 
 # Intent -> command
 
@@ -141,10 +142,10 @@ If the user wants exact USDC withdrawal after liquidation, prefer the exact `tot
 
 | Error | Action |
 |-------|--------|
-| `not tradable in current session` | skip token or show `list --search <SYM>` |
-| `market is closed` | tell user when trading reopens |
+| `not_tradable` | skip token or show `list --search <SYM>` |
+| `market_closed` | tell user when trading reopens |
 | `No swap route` / `HTTP 400` | likely no liquidity or accidental parallel flow |
-| `Slippage too high` | reduce size or skip token |
+| `slippage_too_high` | reduce size or skip token |
 | `Solana RPC unavailable` | wait 5s, retry; after repeated failures suggest `RWA_RPC_URL` |
 
 # Cheapest useful call
