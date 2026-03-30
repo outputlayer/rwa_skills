@@ -34,7 +34,7 @@ npx skills add outputlayer/rwa_skills -g -y
 
 | Skill | Description |
 |-------|-------------|
-| **rwa-trade** | Buy/sell, dry-run previews, market hours, bulk buy, close-all |
+| **rwa-trade** | Buy/sell, dry-run previews, market hours, bulk buy/sell, close-all, tradable check |
 | **rwa-portfolio** | Holdings, P&L, allocation, price history |
 | **rwa-wallet** | Wallet setup, encryption, send/withdraw, reclaim rent |
 
@@ -44,7 +44,7 @@ npx skills add outputlayer/rwa_skills -g -y
 - Prefer `rwa --json` everywhere
 - Add a canonical example for every common workflow
 - Treat `--dry-run` as the default preview path for state-changing commands
-- Favor the cheapest useful command first
+- Favor the cheapest useful command first — one `list` call covers all tradable checks
 - Avoid parallel wallet-changing commands
 - Preserve exact CLI amount precision; never manually round inputs
 - Encode bulk-buy and bulk-sell best practices directly in the skills
@@ -67,6 +67,22 @@ rwa --json gm sell TSLA 50% --dry-run
 rwa --json gm sell TSLA 50% -y
 ```
 
+Buy multiple tokens — check tradable + buy in 2 commands:
+
+```bash
+# 1. Get all tradable tokens in one call, filter by sector
+rwa --json gm list | python3 -c "import sys,json; tokens=[t for t in json.load(sys.stdin) if t.get('sector')=='Healthcare' and t['tradable']]; [print(t['symbol']) for t in tokens]"
+
+# 2. Buy all at once — per-token amounts, parallel
+rwa --json gm buy-basket JNJ 25 LLY 25 PFE 25 ABBV 25 --parallel -y
+```
+
+Sell specific positions:
+
+```bash
+rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all --parallel -y
+```
+
 Portfolio lookup:
 
 ```bash
@@ -76,7 +92,7 @@ rwa --json gm portfolio
 Withdraw after liquidation:
 
 ```bash
-rwa --json gm close-all -y
+rwa --json gm close-all --parallel -y
 rwa --json gm reclaim
 rwa --json gm send USDC all <ADDR> -y
 rwa --json gm send SOL all <ADDR> -y

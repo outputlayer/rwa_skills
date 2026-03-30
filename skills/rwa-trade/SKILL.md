@@ -11,6 +11,70 @@ description: >
 
 Buy and sell 264 tokenized stocks & ETFs ([Ondo Global Markets](https://ondo.finance/)) on Solana.
 
+## ⚡ Buying multiple tokens — the fast path
+
+**One `list` call gives you tradable status for ALL tokens. Then one `buy-basket` buys them all.**
+
+```bash
+# Step 1: check tradable + filter — ONE RPC call
+rwa --json gm list | python3 -c "
+import sys, json
+tokens = json.load(sys.stdin)
+tradable = [t['symbol'] for t in tokens if t['tradable']]
+print('Tradable:', tradable[:10])  # or filter by sector
+"
+
+# Step 2: buy everything in one command, parallel
+rwa --json gm buy-basket AAPL 50 TSLA 50 NVDA 50 SPY 50 --parallel -y
+```
+
+**Never do this (wastes tokens, slow, breaks at scale):**
+
+```bash
+# ❌ BAD — one check per token
+rwa --json gm list --search AAPL
+rwa --json gm list --search TSLA
+rwa --json gm list --search NVDA
+rwa gm buy AAPL 50 -y && sleep 5 && rwa gm buy TSLA 50 -y && sleep 5 && rwa gm buy NVDA 50 -y
+```
+
+### Full "build a themed portfolio" in 3 commands
+
+```bash
+# 1. Check USDC balance
+rwa --json gm portfolio
+
+# 2. Get all tradable tokens + filter by sector — ONE call
+rwa --json gm list | python3 -c "
+import sys, json
+tokens = [t for t in json.load(sys.stdin) if t.get('sector')=='Healthcare' and t['tradable']]
+pairs = ' '.join(f\"{t['symbol']} 25\" for t in tokens[:8])
+print(pairs)
+"
+# Output example: JNJon 25 LLYon 25 PFEon 25 ABBVon 25 MRKon 25
+
+# 3. Buy all at once (paste the output from step 2)
+rwa --json gm buy-basket JNJon 25 LLYon 25 PFEon 25 ABBVon 25 MRKon 25 --parallel -y
+```
+
+`buy-basket` validates USDC balance and checks tradability before the first swap.
+Tokens that fail go into `failed[]` — the rest still execute. Never loop `buy` manually.
+
+### Full rebalance — sell everything, rebuy a new set
+
+```bash
+# 1. Sell ALL current positions
+rwa --json gm close-all --parallel -y
+
+# 2. Find new tradable tokens
+rwa --json gm list | python3 -c "import sys,json; tokens=[t for t in json.load(sys.stdin) if t.get('sector')=='Technology' and t['tradable']]; [print(t['symbol']) for t in tokens[:6]]"
+
+# 3. Buy new basket in one command
+rwa --json gm buy-basket AAPL 100 NVDA 100 MSFT 100 --parallel -y
+```
+
+---
+
 ## Prerequisites
 
 Assume `rwa` is installed and in PATH. If "command not found", install:
@@ -26,7 +90,7 @@ Do NOT prepend `export PATH=...` to every command. The installer adds rwa to PAT
 - **NEVER use `&` (background) for ANY rwa command** — not for quotes, trades, history, or anything else. Jupiter API rejects concurrent requests from the same wallet with HTTP 400. Always run one command at a time, sequentially.
 - **Wait between commands**: Add `sleep 3` between consecutive rwa commands. Solana RPC rate-limits aggressively.
 - **RPC errors ("Solana RPC unavailable")**: Wait at least 5 seconds before retrying. Do NOT retry immediately. After 3 failures, stop and tell the user to set `RWA_RPC_URL`.
-- **Quote requires AMOUNT**: `rwa --json gm quote <SYMBOL> <AMOUNT>`. Amount is mandatory (USDC for buy, tokens for sell).
+- **Check tradable status**: Use `rwa --json gm list` ONCE and filter with `python3`. The `tradable` field is per-token per-session. Do NOT query tokens one-by-one.
 - **Batch quotes**: Use a sequential loop (NO `&`). Amount is required:
 
   ```bash
@@ -47,10 +111,19 @@ Do NOT prepend `export PATH=...` to every command. The installer adds rwa to PAT
   ```
 
   Filter by sector (Healthcare, Technology, Financials, Energy, etc.), type (stock/etf), or tradable status — all from one call.
-- **Buy multiple**: Sequential with sleep:
+- **Buy multiple tokens**: Use `buy-basket` with `SYMBOL AMOUNT` pairs. Each token can have a **different** USDC amount:
 
   ```bash
-  rwa gm buy TSLA 100 -y && sleep 5 && rwa gm buy AAPL 100 -y && sleep 5 && rwa gm buy NVDA 100 -y
+  rwa --json gm buy-basket TSLA 100 AAPL 50 NVDA 25 -y --parallel
+  ```
+
+  Do NOT use the old `--usdc-each` flag — it no longer exists.
+
+- **Sell multiple tokens**: Use `sell-basket` for partial sells, or `close-all` to sell everything:
+
+  ```bash
+  rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all -y --parallel  # sell specific amounts
+  rwa --json gm close-all -y                                      # sell 100% of everything
   ```
 
 - **Sell multiple**: Use `close-all` to sell everything at once:
@@ -128,9 +201,14 @@ rwa --json gm close-all -y             # Sell ALL positions (sequential)
 rwa --json gm close-all -y --parallel  # Sell ALL positions in parallel (~22s flat)
 rwa --json gm close-all 50% -y --parallel  # Sell 50% in parallel
 
-# Buy a basket of tokens — all at once
-rwa --json gm buy-basket JNJ LLY PFE ABBV --usdc-each 25 -y --parallel
-rwa --json gm buy-basket JNJ LLY PFE ABBV --usdc-each 25 -y --dry-run  # Preview
+# Buy a basket of tokens with per-token USDC amounts
+rwa --json gm buy-basket JNJ 25 LLY 25 PFE 25 ABBV 25 -y --parallel
+rwa --json gm buy-basket JNJ 25 LLY 25 PFE 25 ABBV 25 -y --dry-run    # Preview
+rwa --json gm buy-basket AAPL 100 TSLA 50 NVDA 25 -y                   # Different amounts
+
+# Sell a basket of tokens with per-token amounts
+rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all -y --parallel
+rwa --json gm sell-basket SPY 5 TSLA 3 -y --dry-run                    # Preview
 ```
 
 ### 5. Reclaim Rent
@@ -177,13 +255,16 @@ JSON output always includes `sold`, `failed`, and `total_usdc`:
 
 ### 7. Buy a Basket of Tokens
 
-Buy multiple tokens with the same USDC amount each:
+Buy multiple tokens with interleaved `SYMBOL AMOUNT` pairs — each token gets its own USDC allocation:
 
 ```bash
-rwa --json gm buy-basket JNJ LLY PFE ABBV --usdc-each 25 -y --parallel
-rwa --json gm buy-basket JNJ LLY PFE ABBV --usdc-each 25 -y --dry-run   # Preview
-rwa --json gm buy-basket JNJ LLY PFE ABBV --usdc-each 25 -y             # Sequential
+rwa --json gm buy-basket JNJ 25 LLY 25 PFE 25 ABBV 25 -y --parallel   # All same amount
+rwa --json gm buy-basket AAPL 100 TSLA 50 NVDA 25 -y --parallel        # Different amounts
+rwa --json gm buy-basket JNJ 25 LLY 25 -y --dry-run                    # Preview
+rwa --json gm buy-basket JNJ 25 LLY 25 -y                              # Sequential
 ```
+
+Syntax: `SYMBOL1 AMOUNT1 SYMBOL2 AMOUNT2 ...` — pairs, no `--usdc-each`.
 
 JSON output:
 
@@ -192,6 +273,29 @@ JSON output:
 ```
 
 `failed[]` contains `{token, error}` for each failed swap — always check it. Partial success (some bought, some failed) still returns `status:"success"`.
+
+### 8. Sell a Basket of Tokens
+
+Sell multiple tokens with per-token amounts in one command:
+
+```bash
+rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all -y --parallel   # Sell specific amounts
+rwa --json gm sell-basket SPY 50% TSLA 50% -y --parallel        # Sell % of each
+rwa --json gm sell-basket SPY 5 TSLA 3 -y --dry-run             # Preview
+```
+
+Syntax: `SYMBOL1 AMOUNT1 SYMBOL2 AMOUNT2 ...` — same pair format as `buy-basket`. Amounts can be exact tokens, `50%`, or `all`.
+
+JSON output:
+
+```json
+{"status":"success","sold":[{"token":"SPYon","amount":"5.000000","usdc":"1316.25","tx":"https://solscan.io/tx/...","slippage_pct":-0.12}],"failed":[],"total_usdc_received":"1316.25"}
+```
+
+**When to use `sell-basket` vs `close-all`:**
+
+- Use `sell-basket` when amounts per token differ or when selling only some positions
+- Use `close-all` when selling all positions (or a uniform percentage of all)
 
 ## Amount Formats
 
@@ -214,8 +318,11 @@ JSON output:
 // rwa --json gm buy TSLA 100 -y
 {"status":"success","amount":"0.258","token":"TSLAon","counter_amount":"100.00","counter_token":"USDC","tx":"https://solscan.io/tx/...","slippage_pct":-0.39}
 
-// rwa --json gm buy-basket JNJ LLY --usdc-each 25 -y --parallel
+// rwa --json gm buy-basket JNJ 25 LLY 25 -y --parallel
 {"status":"success","bought":[{"token":"JNJon","received":"0.061","usdc":"25","tx":"https://solscan.io/tx/...","slippage_pct":-0.52},{"token":"LLYon","received":"0.058","usdc":"25","tx":"https://solscan.io/tx/...","slippage_pct":-0.19}],"failed":[],"total_usdc_spent":"50.00"}
+
+// rwa --json gm sell-basket SPY 5 TSLA 3 -y --parallel
+{"status":"success","sold":[{"token":"SPYon","amount":"5.000000","usdc":"1316.25","tx":"https://solscan.io/tx/...","slippage_pct":-0.12},{"token":"TSLAon","amount":"3.000000","usdc":"1156.40","tx":"https://solscan.io/tx/...","slippage_pct":-0.08}],"failed":[],"total_usdc_received":"2472.65"}
 
 // rwa --json gm close-all -y --parallel  (partial failure example)
 {"status":"success","sold":[{"token":"JNJon","amount":"0.061","usdc":"14.95","tx":"https://solscan.io/tx/..."}],"failed":[{"token":"TSLAon","error":"Swap failed (code -2004): swap rejected"}],"total_usdc":"14.95"}
@@ -262,8 +369,11 @@ When user asks for a themed portfolio (pharma, tech, etc.):
 4. Build the portfolio with `buy-basket --parallel` (preferred) or sequential fallback:
 
    ```bash
-   # Preferred: all buys in ~22s flat
-   rwa --json gm buy-basket JNJ LLY PFE ABBV --usdc-each 10 -y --parallel
+   # Preferred: all buys in ~22s flat (each token gets its own USDC amount)
+   rwa --json gm buy-basket JNJ 10 LLY 10 PFE 10 ABBV 10 -y --parallel
+
+   # Different amounts per token
+   rwa --json gm buy-basket JNJ 20 LLY 15 PFE 10 ABBV 10 -y --parallel
 
    # Fallback: sequential with sleep
    rwa --json gm buy JNJ 10 -y && sleep 3 && rwa --json gm buy LLY 10 -y && sleep 3 && rwa --json gm buy PFE 10 -y
@@ -274,8 +384,8 @@ When user asks for a themed portfolio (pharma, tech, etc.):
 
 **Overnight liquidity warning**: Many tokens have poor liquidity outside Regular Market (9:30 AM – 4 PM ET). If buys fail with `code -2004`/`-2005`, do NOT retry the same token immediately — the MM cooldown will quote -10%, which our guard blocks (goes to `failed[]` instead of executing). Substitute a different token or wait for Regular Market.
 
-   - **Liquid overnight** (usually work): `LLY`, `NVO`, `JNJ`, `PFE`, `ABBV`, `MRK`
-   - **Illiquid overnight** (often fail): `AMGN`, `VRTX`, `UNH`, `ABT` — buy these during Regular Market only
+- **Liquid overnight** (usually work): `LLY`, `NVO`, `JNJ`, `PFE`, `ABBV`, `MRK`
+- **Illiquid overnight** (often fail): `AMGN`, `VRTX`, `UNH`, `ABT` — buy these during Regular Market only
 
 ## Safety — Pre-Trade Checklist
 
