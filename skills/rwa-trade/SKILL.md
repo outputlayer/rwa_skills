@@ -272,7 +272,10 @@ When user asks for a themed portfolio (pharma, tech, etc.):
 5. If a buy fails (slippage/no route), it lands in `failed[]` — skip it and try next — do NOT retry immediately
 6. Verify: `rwa --json gm portfolio`
 
-**Overnight liquidity warning**: Many tokens have poor liquidity outside Regular Market (9:30 AM – 4 PM ET). If buys fail with slippage errors, suggest trying during regular hours or picking more liquid tokens (LLY, JNJ, PFE, ABBV usually work).
+**Overnight liquidity warning**: Many tokens have poor liquidity outside Regular Market (9:30 AM – 4 PM ET). If buys fail with `code -2004`/`-2005`, do NOT retry the same token immediately — the MM cooldown will quote -10%, which our guard blocks (goes to `failed[]` instead of executing). Substitute a different token or wait for Regular Market.
+
+   - **Liquid overnight** (usually work): `LLY`, `NVO`, `JNJ`, `PFE`, `ABBV`, `MRK`
+   - **Illiquid overnight** (often fail): `AMGN`, `VRTX`, `UNH`, `ABT` — buy these during Regular Market only
 
 ## Safety — Pre-Trade Checklist
 
