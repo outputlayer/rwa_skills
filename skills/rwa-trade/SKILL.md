@@ -91,10 +91,10 @@ Do NOT prepend `export PATH=...` to every command. The installer adds rwa to PAT
 - **Wait between commands**: Add `sleep 3` between consecutive rwa commands. Solana RPC rate-limits aggressively.
 - **RPC errors ("Solana RPC unavailable")**: Wait at least 5 seconds before retrying. Do NOT retry immediately. After 3 failures, stop and tell the user to set `RWA_RPC_URL`.
 - **Check tradable status**: Use `rwa --json gm list` ONCE and filter with `python3`. The `tradable` field is per-token per-session. Do NOT query tokens one-by-one.
-- **Batch quotes**: Use a sequential loop (NO `&`). Amount is required:
+- **Batch previews**: Use a sequential loop (NO `&`). Amount is required:
 
   ```bash
-  for sym in TSLA AAPL NVDA SPY; do rwa --json gm quote $sym 100 2>/dev/null; sleep 2; done
+  for sym in TSLA AAPL NVDA SPY; do rwa --json gm buy $sym 100 --dry-run 2>/dev/null; sleep 2; done
   ```
 
 - **Batch history**: Sequential loop (NO `&`):
@@ -183,11 +183,13 @@ Both `TSLA` and `TSLAon` symbol formats accepted.
 
 Available sectors: Technology, Healthcare, Financials, Consumer Discretionary, Energy, Industrials, Materials, Utilities, Real Estate Sector, Infrastructure.
 
-### 3. Get a Quote
+### 3. Preview a Trade (Dry Run)
+
+There is no separate `quote` command — use `--dry-run` on buy/sell.
 
 ```bash
-rwa --json gm quote TSLA 100          # Buy: 100 USDC → TSLA
-rwa --json gm quote TSLA 5 --sell     # Sell: 5 TSLA → USDC
+rwa --json gm buy TSLA 100 --dry-run    # Buy preview: 100 USDC → TSLA
+rwa --json gm sell TSLA 5 --dry-run     # Sell preview: 5 TSLA → USDC
 ```
 
 ### 4. Execute Trade
@@ -309,8 +311,8 @@ JSON output:
 // rwa --json gm hours
 {"status":"open","session":"Regular Market","session_hours":"9:30 AM – 3:59 PM ET","now":"Monday 10:30 AM ET","countdown":"next session in 5h 30m","tradable_count":214}
 
-// rwa --json gm quote TSLA 100
-{"input":"100","input_token":"USDC","output":"0.025844","output_token":"TSLAon","input_usd":100.0,"output_usd":99.6,"slippage_pct":-0.39,"price_impact_pct":-0.39,"fee_bps":10,"tradable":true}
+// rwa --json gm buy TSLA 100 --dry-run
+{"status":"dry_run","amount":"0.025844","token":"TSLAon","counter_amount":"100.00","counter_token":"USDC","slippage_pct":-0.39}
 
 // rwa --json gm list --search tsla
 [{"symbol":"TSLAon","name":"Tesla","type":"stock","sector":"Consumer Discretionary","tradable":true}]
