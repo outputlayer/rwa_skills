@@ -44,7 +44,7 @@ npx skills add outputlayer/rwa_skills -g -y
 - Prefer `rwa --json` everywhere
 - Add a canonical example for every common workflow
 - Treat `--dry-run` as the default preview path for state-changing commands
-- Favor the cheapest useful command first — one `list` call covers all tradable checks
+- Favor the cheapest useful command first — use `gm tradable` for symbol checks and `gm search` for bulk scans
 - Avoid parallel wallet-changing commands
 - Preserve exact CLI amount precision; never manually round inputs
 - Encode bulk-buy and bulk-sell best practices directly in the skills
@@ -71,7 +71,7 @@ Buy multiple tokens — check tradable + buy in 2 commands:
 
 ```bash
 # 1. Get all tradable tokens in one call, filter by sector
-rwa --json gm list | python3 -c "import sys,json; tokens=[t for t in json.load(sys.stdin) if t.get('sector')=='Healthcare' and t['tradable']]; [print(t['symbol']) for t in tokens]"
+rwa --json gm search --tradable-only --sector Healthcare --type stock
 
 # 2. Buy all at once — per-token amounts, parallel
 rwa --json gm buy-basket JNJ 25 LLY 25 PFE 25 ABBV 25 --parallel -y

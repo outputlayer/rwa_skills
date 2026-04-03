@@ -13,16 +13,11 @@ Buy and sell 264 tokenized stocks & ETFs ([Ondo Global Markets](https://ondo.fin
 
 ## ⚡ Buying multiple tokens — the fast path
 
-**One `list` call gives you tradable status for ALL tokens. Then one `buy-basket` buys them all.**
+**Use `gm search` for bulk scans and `gm tradable` for symbol checks. Then one `buy-basket` buys them all.**
 
 ```bash
-# Step 1: check tradable + filter — ONE RPC call
-rwa --json gm list | python3 -c "
-import sys, json
-tokens = json.load(sys.stdin)
-tradable = [t['symbol'] for t in tokens if t['tradable']]
-print('Tradable:', tradable[:10])  # or filter by sector
-"
+# Step 1: check tradable + filter — ONE call
+rwa --json gm search --tradable-only --sector Technology --type stock
 
 # Step 2: buy everything in one command, parallel
 rwa --json gm buy-basket AAPL 50 TSLA 50 NVDA 50 SPY 50 --parallel -y
@@ -32,9 +27,9 @@ rwa --json gm buy-basket AAPL 50 TSLA 50 NVDA 50 SPY 50 --parallel -y
 
 ```bash
 # ❌ BAD — one check per token
-rwa --json gm list --search AAPL
-rwa --json gm list --search TSLA
-rwa --json gm list --search NVDA
+rwa --json gm tradable AAPL
+rwa --json gm tradable TSLA
+rwa --json gm tradable NVDA
 rwa gm buy AAPL 50 -y && sleep 5 && rwa gm buy TSLA 50 -y && sleep 5 && rwa gm buy NVDA 50 -y
 ```
 
@@ -44,14 +39,9 @@ rwa gm buy AAPL 50 -y && sleep 5 && rwa gm buy TSLA 50 -y && sleep 5 && rwa gm b
 # 1. Check USDC balance
 rwa --json gm portfolio
 
-# 2. Get all tradable tokens + filter by sector — ONE call
-rwa --json gm list | python3 -c "
-import sys, json
-tokens = [t for t in json.load(sys.stdin) if t.get('sector')=='Healthcare' and t['tradable']]
-pairs = ' '.join(f\"{t['symbol']} 25\" for t in tokens[:8])
-print(pairs)
-"
-# Output example: JNJon 25 LLYon 25 PFEon 25 ABBVon 25 MRKon 25
+# 2. Get all tradable healthcare stocks — ONE call
+rwa --json gm search --tradable-only --sector Healthcare --type stock
+# Then build the `SYMBOL AMOUNT` pairs from that result
 
 # 3. Buy all at once (paste the output from step 2)
 rwa --json gm buy-basket JNJon 25 LLYon 25 PFEon 25 ABBVon 25 MRKon 25 --parallel -y
@@ -67,7 +57,7 @@ Tokens that fail go into `failed[]` — the rest still execute. Never loop `buy`
 rwa --json gm close-all --parallel -y
 
 # 2. Find new tradable tokens
-rwa --json gm list | python3 -c "import sys,json; tokens=[t for t in json.load(sys.stdin) if t.get('sector')=='Technology' and t['tradable']]; [print(t['symbol']) for t in tokens[:6]]"
+rwa --json gm search --tradable-only --sector Technology --type stock
 
 # 3. Buy new basket in one command
 rwa --json gm buy-basket AAPL 100 NVDA 100 MSFT 100 --parallel -y
@@ -90,7 +80,7 @@ Do NOT prepend `export PATH=...` to every command. The installer adds rwa to PAT
 - **NEVER use `&` (background) for ANY rwa command** — not for quotes, trades, history, or anything else. Jupiter API rejects concurrent requests from the same wallet with HTTP 400. Always run one command at a time, sequentially.
 - **Wait between commands**: Add `sleep 3` between consecutive rwa commands. Solana RPC rate-limits aggressively.
 - **RPC errors ("Solana RPC unavailable")**: Wait at least 5 seconds before retrying. Do NOT retry immediately. After 3 failures, stop and tell the user to set `RWA_RPC_URL`.
-- **Check tradable status**: Use `rwa --json gm list` ONCE and filter with `python3`. The `tradable` field is per-token per-session. Do NOT query tokens one-by-one.
+- **Check tradable status**: Use `rwa --json gm tradable <SYM...>` for symbol checks or `rwa --json gm search --tradable-only ...` for bulk scans. Do NOT fall back to ad-hoc Python for routine filtering.
 - **Batch previews**: Use a sequential loop (NO `&`). Amount is required:
 
   ```bash
@@ -103,14 +93,8 @@ Do NOT prepend `export PATH=...` to every command. The installer adds rwa to PAT
   for sym in TSLA AAPL NVDA; do rwa --json gm history $sym -r 1W 2>/dev/null; sleep 2; done
   ```
 
-- **Find one token**: Use `rwa --json gm list --search <keyword>` for a single symbol or name.
-- **Find tokens by sector/type**: Use `rwa --json gm list` piped to `python3` for filtering — this is ONE call instead of N separate searches:
-
-  ```bash
-  rwa --json gm list | python3 -c "import sys,json; [print(t['symbol'],t['name']) for t in json.load(sys.stdin) if t.get('sector')=='Healthcare' and t['tradable']]"
-  ```
-
-  Filter by sector (Healthcare, Technology, Financials, Energy, etc.), type (stock/etf), or tradable status — all from one call.
+- **Find one token**: Use `rwa --json gm tradable <SYM>` for tradability or `rwa --json gm search --search <keyword>` for discovery.
+- **Find tokens by sector/type**: Use `rwa --json gm search --tradable-only --sector <SECTOR> --type <stock|etf>`.
 - **Buy multiple tokens**: Use `buy-basket` with `SYMBOL AMOUNT` pairs. Each token can have a **different** USDC amount:
 
   ```bash
@@ -154,7 +138,7 @@ Do NOT prepend `export PATH=...` to every command. The installer adds rwa to PAT
 
 ### 1. Check Market Hours
 
-Trading is 24/5: Sunday 8 PM — Friday 8 PM ET.
+Trading follows NYSE hours plus holidays. `gm hours` already accounts for weekends and NYSE holiday closures.
 
 ```bash
 rwa --json gm hours
@@ -162,22 +146,22 @@ rwa --json gm hours
 
 ### 2. Find Tokens
 
-**Single token**: `rwa --json gm list --search TSLA` — fast, one result.
+**Single token**: `rwa --json gm tradable TSLA` for tradability, or `rwa --json gm search --search TSLA` for discovery.
 
-**Multiple tokens or sector scan**: One `list` call + python3 filter is more efficient than N separate `--search` calls:
+**Multiple tokens or sector scan**: use `gm search` directly:
 
 ```bash
-# All tradable healthcare stocks (1 RPC call vs 8+ searches)
-rwa --json gm list | python3 -c "import sys,json; [print(json.dumps(t)) for t in json.load(sys.stdin) if t.get('sector')=='Healthcare' and t['tradable']]"
+# All tradable healthcare stocks
+rwa --json gm search --tradable-only --sector Healthcare --type stock
 
 # All tradable ETFs
-rwa --json gm list | python3 -c "import sys,json; [print(json.dumps(t)) for t in json.load(sys.stdin) if t.get('type')=='etf' and t['tradable']]"
+rwa --json gm search --tradable-only --type etf
 
-# Count by sector
-rwa --json gm list | python3 -c "import sys,json; from collections import Counter; c=Counter(t.get('sector','ETF') for t in json.load(sys.stdin) if t['tradable']); [print(f'{s}: {n}') for s,n in c.most_common()]"
+# Company-name scan inside tradable industrials
+rwa --json gm search --tradable-only --sector Industrials --name-keyword lockheed --name-keyword raytheon
 ```
 
-Use `rwa --json gm list --search <keyword>` only for quick single-token lookups.
+Use `rwa --json gm search --search <keyword>` only for quick keyword lookups.
 JSON output includes `type` ("stock" or "etf"), `sector` (e.g. "Technology", "Healthcare"), cleaned company name, and `tradable` (true/false for current session).
 Both `TSLA` and `TSLAon` symbol formats accepted.
 
