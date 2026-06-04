@@ -26,6 +26,7 @@ Wallet setup + transfers for the rwa CLI. Use `--json` for agent flows.
 | Intent | Command |
 |---|---|
 | Install CLI | `curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh \| sh` |
+| Update CLI to latest | `rwa update -y` (`--check` to preview; verifies SHA-256, fail-closed) |
 | Show address | `rwa keys show` |
 | New wallet | `rwa keys generate --encrypt` |
 | Import wallet | `rwa keys import --seed-phrase "..." --encrypt` (or `--private-key <B58>` / `--file <PATH>`) |
@@ -59,6 +60,7 @@ rwa --json gm send SOL  all <ADDR> -y       # 4. withdraw remaining SOL
 | `No wallet found` | Run `rwa keys generate --encrypt` |
 | `Insufficient SOL` | Fund wallet with SOL (CLI reserves fees; no auto-convert from USDC) |
 | RPC `unavailable` / `all RPC endpoints failed` | Wait a few seconds; on repeats set `RWA_RPC_URL` to a dedicated endpoint |
+| `rwa update` → `rate_limited` / `checksum_mismatch` | Retry shortly; on repeat reinstall via the install.sh one-liner |
 
 ## Notes
 
