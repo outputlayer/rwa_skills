@@ -16,6 +16,7 @@ Buy/sell 264 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pas
 - **NEVER use `&`, background, or parallel processes** — Jupiter rejects concurrent requests from one wallet (HTTP 400). One command at a time, `sleep 3` between sequential calls.
 - For multi-token trades use the built-in `--parallel` flag (safe internal concurrency), NOT shell `&`.
 - No `quote` command — preview with `--dry-run`.
+- `--quote-only` (buy) quotes any size without a balance check; never executes (rejects `-y`), still enforces market hours + slippage. JSON `status` is `dry_run`. Use to size a buy before funding.
 - `sell` swaps tokens → USDC; `send` transfers assets out. Never confuse them.
 - CLI auto-retries transient swap failures. **Do NOT retry manually** unless it reports failure after retries.
 - Multi-token = `buy-basket` / `sell-basket` / `close-all`. Never loop `buy`/`sell` by hand.
