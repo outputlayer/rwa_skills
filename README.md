@@ -45,7 +45,7 @@ npx skills add outputlayer/rwa_skills -g -y
 - Add a canonical example for every common workflow
 - Treat `--dry-run` as the default preview path for state-changing commands
 - Favor the cheapest useful command first — use `gm tradable` for symbol checks and `gm search` for bulk scans
-- Avoid parallel wallet-changing commands
+- Avoid parallel wallet-changing *processes* (multi-token commands parallelize internally)
 - Preserve exact CLI amount precision; never manually round inputs
 - Encode bulk-buy and bulk-sell best practices directly in the skills
 - Keep portfolio answers honest about `cash.*` vs `gm_positions.*`; never treat GM totals as full wallet totals
@@ -74,13 +74,13 @@ Buy multiple tokens — check tradable + buy in 2 commands:
 rwa --json gm search --tradable-only --sector Healthcare --type stock
 
 # 2. Buy all at once — per-token amounts, parallel
-rwa --json gm buy-basket JNJ 25 LLY 25 PFE 25 ABBV 25 --parallel -y
+rwa --json gm buy-basket JNJ 25 LLY 25 PFE 25 ABBV 25 -y   # parallel by default
 ```
 
 Sell specific positions:
 
 ```bash
-rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all --parallel -y
+rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all -y
 ```
 
 Portfolio lookup:
@@ -92,7 +92,7 @@ rwa --json gm portfolio
 Withdraw after liquidation:
 
 ```bash
-rwa --json gm close-all --parallel -y
+rwa --json gm close-all -y
 rwa --json gm reclaim
 rwa --json gm send USDC all <ADDR> -y
 rwa --json gm send SOL all <ADDR> -y

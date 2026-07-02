@@ -9,37 +9,40 @@ description: >
 
 # RWA Trade
 
-Buy/sell 264 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pass `--json`; add `-y` to execute, `--dry-run` to preview.
+Buy/sell 438 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pass `--json`; add `-y` to execute, `--dry-run` to preview.
 
 ## Golden rules
 
-- **NEVER use `&`, background, or parallel processes** — Jupiter rejects concurrent requests from one wallet (HTTP 400). One command at a time, `sleep 3` between sequential calls.
-- For multi-token trades use the built-in `--parallel` flag (safe internal concurrency), NOT shell `&`.
+- **NEVER use `&`, background, or parallel shell processes** — one `rwa` process at a time (a lock enforces it). Multi-token commands parallelize internally.
+- Minimum buy: **5 USDC** (single buy and per basket item).
 - No `quote` command — preview with `--dry-run`.
-- `--quote-only` (buy) quotes any size without a balance check; never executes (rejects `-y`), still enforces market hours + slippage. JSON `status` is `dry_run`. Use to size a buy before funding.
+- `--quote-only` (buy) quotes any size without a balance check; never executes (rejects `-y`). JSON `status` is `dry_run`. Use to size a buy before funding.
 - `sell` swaps tokens → USDC; `send` transfers assets out. Never confuse them.
 - CLI auto-retries transient swap failures. **Do NOT retry manually** unless it reports failure after retries.
-- Multi-token = `buy-basket` / `sell-basket` / `close-all`. Never loop `buy`/`sell` by hand.
+- Multi-token = `buy-basket` / `sell-basket` / `close-all` — they run **in parallel by default** (bounded internally). Never loop `buy`/`sell` by hand. `--sequential` is a rate-limit fallback only.
 - Bulk filtering = `gm search` flags. **Never** pipe `gm list` through ad-hoc Python.
 
 ## Commands
 
 ```bash
-rwa --json gm hours                                              # session + tradable_count
-rwa --json gm search --tradable-only --sector Technology --type stock   # bulk scan
-rwa --json gm tradable TSLA NVDA                                 # check specific symbols
-rwa --json gm buy  TSLA 100 --dry-run                            # preview (100 USDC in)
-rwa --json gm buy  TSLA 100 -y --slippage 50                     # execute, max 0.5% slippage
-rwa --json gm sell TSLA all  -y                                  # sell all (also 50% / exact)
-rwa --json gm buy-basket  AAPL 50 TSLA 50 NVDA 50 -y --parallel  # SYMBOL AMOUNT pairs
-rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all  -y --parallel
-rwa --json gm close-all -y --parallel                            # sell ALL positions (~22s)
-rwa --json gm close-all 50% -y                                   # sell 50% of every position
-rwa --json gm reclaim                                            # close empty accounts, reclaim rent
+rwa --json gm hours                                          # session + tradable_count
+rwa --json gm search --tradable-only --sector Technology     # bulk scan
+rwa --json gm search --tag asia --tag "fixed income"         # any Ondo tag: region, asset class, factor
+rwa --json gm tradable TSLA NVDA                             # check specific symbols
+rwa --json gm buy  TSLA 100 --dry-run                        # preview (100 USDC in)
+rwa --json gm buy  TSLA 100 -y --slippage 50                 # execute, max 0.5% slippage
+rwa --json gm sell TSLA all  -y                              # sell all (also 50% / exact)
+rwa --json gm buy-basket  AAPL 50 TSLA 50 NVDA 50 -y         # SYMBOL AMOUNT pairs (parallel)
+rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all  -y
+rwa --json gm close-all -y                                   # sell ALL positions (parallel, ~2-8s)
+rwa --json gm close-all 50% -y                               # sell 50% of every position
+rwa --json gm pnl                                            # avg entry + realized/unrealized P&L
+rwa --json gm reclaim                                        # close empty accounts, reclaim rent
 ```
 
 - `close-all` skips positions < $1.50 (MMs reject tiny swaps) and lists them separately.
 - Slippage: default 100 bps; hard-blocked above 3%. Amounts: exact `100`, `50%`, or `all`.
+- `search` items carry optional `asset_class`/`region`; `--tag` matches any Ondo tag label (24 factor labels incl. Large Cap, Dividend, High Yield).
 
 ## Key JSON
 
@@ -50,26 +53,29 @@ rwa --json gm reclaim                                            # close empty a
 {"status":"success","sold":[{"token":"TSLAon","amount":"0.25","usdc":"96.50","tx":"..."}],"failed":[],"total_usdc":"96.50"}
 ```
 
-`status:"success"` only means the run finished — **always check `failed[]`** (always present). `sold[]`/`bought[]` hold the swaps that worked; partial success is normal.
+`status:"success"` only means the run finished — **always check `failed[]`** (always present). Partial success is normal.
+An optional `gas_refuel: {"usdc":"5","sol":"0.02...","tx":"..."}` object appears when the CLI auto-bought SOL for fees before the trade (normal for USDC-only wallets — not an error).
 
 ## Errors → action
 
 | Error / error_kind | Agent action |
 |---|---|
-| `market_closed` | Run `gm hours`; tell user when it reopens |
+| `market_closed` | Weekend/holiday and this token doesn't trade off-hours. Flagships (TSLAon, NVDAon, SPYon, QQQon, GOOGLon…) trade 24/7 — check `gm hours --tradable` |
 | `not_tradable` | Skip token; verify with `gm tradable <SYM>` |
 | `slippage_too_high` | Reduce size or skip; MM cooldown after rapid buy+sell — wait 30–60s |
-| `Minimum buy amount is 1.0 USDC` | Use ≥ $1 |
-| `Insufficient SOL for fees` | CLI does NOT auto-convert USDC→SOL — tell user to fund the wallet with SOL |
-| `Insufficient USDC` | Tell user to fund USDC |
-| `Balance is 0` | No position to sell |
+| `amount_below_minimum` | Use ≥ 5 USDC per token |
+| `insufficient_funds` (SOL) | Non-gasless route needs ~0.002 SOL. The CLI normally auto-refuels from USDC; if it couldn't, retry (gasless route may fill) or fund SOL |
+| `insufficient_funds` (USDC) | Tell user to fund USDC |
+| `no_position` / `Balance is 0` | No position to sell |
+| `route_unfillable` | Every market maker declined this size right now — try a larger amount or wait |
 | Swap failed code -1000/-2003/-2004/-2005 | CLI already auto-retried — do NOT retry manually |
-| `No swap route` / HTTP 400 / HTTP 429 | Almost always parallel `&` — STOP, run sequentially |
-| RPC `unavailable` / `all RPC endpoints failed` | Wait a few seconds; on repeats set `RWA_RPC_URL` to a dedicated endpoint (free key: Alchemy/Helius/QuickNode) |
+| RPC `unavailable` (exit 75) | Transient — wait a few seconds; on repeats set `RWA_RPC_URL` to a dedicated endpoint |
 
-## Overnight liquidity
+Exit code **75** = transient, safe to retry the command; **1** = permanent, don't.
 
-Outside Regular Market (9:30 AM–4 PM ET) many tokens are illiquid. Usually fine: LLY, NVO, JNJ, PFE, ABBV, MRK. Often fail: AMGN, VRTX, UNH, ABT (trade in Regular Market). On `-2004`/`-2005`, substitute a token or wait — don't hammer the same one.
+## Sessions & liquidity
+
+Sessions (ET): Pre-Market 4:00, Regular 9:30, Post-Market 16:00, Overnight 20:00. **Weekends/holidays are off-hours: only flagship tokens trade** (`gm hours --tradable` shows the live set). Outside Regular hours many small caps are illiquid — on repeated `route_unfillable`/`-2004`, substitute a token or wait; don't hammer the same one.
 
 ## Safe pre-trade flow
 
