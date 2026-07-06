@@ -25,7 +25,7 @@ Buy/sell 438 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pas
 ## Commands
 
 ```bash
-rwa --json gm hours                                          # session + tradable_count
+rwa --json gm hours                                          # session + tradable_count + paused_count + offhours flagships (24/7 = flagships only)
 rwa --json gm search --tradable-only --sector Technology     # bulk scan
 rwa --json gm search --tag asia --tag "fixed income"         # any Ondo tag: region, asset class, factor
 rwa --json gm tradable TSLA NVDA                             # check specific symbols
