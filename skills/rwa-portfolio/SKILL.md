@@ -51,6 +51,7 @@ rwa --json gm pnl        # own wallet only (built from the local trade ledger)
 ```
 
 Semantics agents must respect:
+
 - Built **only from trades this CLI executed** (every buy/sell is logged locally per wallet). Deposits/withdrawals are cash movements and are ignored by design.
 - `avg_cost` = average entry price of the open position; `unrealized_usdc` = market value − invested; `realized_usdc` = locked-in P&L from sells; `total_pnl_usdc` = both.
 - A token with an `oversold_qty` field was partly sold beyond CLI-recorded buys (acquired elsewhere) — that part is excluded from P&L, not mispriced.

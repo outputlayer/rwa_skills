@@ -34,7 +34,7 @@ rwa --json gm buy  TSLA 100 -y --slippage 50                 # execute, max 0.5%
 rwa --json gm sell TSLA all  -y                              # sell all (also 50% / exact)
 rwa --json gm buy  TSLA 100 --limit-price 400 -y             # conditional: fills only if quote <= 400 USDC/token
 rwa --json gm sell TSLA all --limit-price 450 -y             # conditional: fills only if quote >= 450
-rwa --json gm buy  SPY 100 --limit-price 748share -y         # limit per underlying SHARE (bare number = per token)
+rwa --json gm buy  SPY 100 --limit-price 748 share -y        # limit per underlying SHARE (bare number = per token)
 rwa --json gm buy  TSLA 100 --max-bps 30 -y                  # reject if all-in cost (spread+fee) > 30 bps
 rwa --json gm buy-basket  AAPL 50 TSLA 50 NVDA 50 -y         # SYMBOL AMOUNT pairs (parallel)
 rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all  -y
@@ -52,7 +52,7 @@ rwa --json gm reclaim                                        # close empty accou
 
 `--limit-price <P>` (buy/sell only) executes **only if the quoted price** (USDC per token) is ≤ P for buy / ≥ P for sell (equality fills); otherwise the command exits 1 with `error_kind: condition_not_met` — same in `--dry-run`. The quote that passes the check is the one executed, so worst-case fill = limit ± slippage; pair with a tight `--slippage 20`. JSON echoes `limit_price` on success. Conflicts with `--quote-only`.
 
-Unit suffix: bare number = per **token**; append `share` (`--limit-price 748share`) to gate per underlying **share** instead. GM tokens are total-return trackers (dividends reinvested), so token price = share price × multiplier — previews expose `share_price`/`shares_per_token` once the multiplier drifts from 1. If the multiplier can't be read for a `share`-limit, the command fails closed with exit 75 (transient — retry next tick).
+Unit: bare number = per **token**; add `share` (`--limit-price 748 share`; joined `748share` also accepted) to gate per underlying **share** instead. GM tokens are total-return trackers (dividends reinvested), so token price = share price × multiplier — previews expose `share_price`/`shares_per_token` once the multiplier drifts from 1. If the multiplier can't be read for a `share`-limit, the command fails closed with exit 75 (transient — retry next tick).
 
 - **Limit order:** schedule `rwa --json gm buy TSLA 100 --limit-price 400 --slippage 20 -y` (cron/loop, every N min) until it exits 0. `condition_not_met` = keep waiting, NOT an error to escalate.
 - **DCA:** plain scheduled `buy <SYM> <AMT> -y` — no limit-price needed.

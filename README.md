@@ -83,7 +83,7 @@ Sell specific positions:
 rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all -y
 ```
 
-Synthetic limit order — schedule until it fills (exit 0; `condition_not_met` = keep waiting). Bare number gates per token; `748share` gates per underlying share:
+Synthetic limit order — schedule until it fills (exit 0; `condition_not_met` = keep waiting). Bare number gates per token; `--limit-price 748 share` gates per underlying share:
 
 ```bash
 rwa --json gm buy TSLA 100 --limit-price 400 --slippage 20 -y
