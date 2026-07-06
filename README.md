@@ -34,7 +34,7 @@ npx skills add outputlayer/rwa_skills -g -y
 
 | Skill | Description |
 |-------|-------------|
-| **rwa-trade** | Buy/sell, dry-run previews, market hours, bulk buy/sell, close-all, tradable check |
+| **rwa-trade** | Buy/sell, conditional orders (`--limit-price`), dry-run previews, market hours, bulk buy/sell, close-all, tradable check |
 | **rwa-portfolio** | Holdings, P&L, allocation, price history |
 | **rwa-wallet** | Wallet setup, encryption, send/withdraw, reclaim rent |
 
@@ -81,6 +81,12 @@ Sell specific positions:
 
 ```bash
 rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all -y
+```
+
+Synthetic limit order — schedule until it fills (exit 0; `condition_not_met` = keep waiting):
+
+```bash
+rwa --json gm buy TSLA 100 --limit-price 400 --slippage 20 -y
 ```
 
 Portfolio lookup:

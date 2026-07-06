@@ -32,6 +32,9 @@ rwa --json gm tradable TSLA NVDA                             # check specific sy
 rwa --json gm buy  TSLA 100 --dry-run                        # preview (100 USDC in)
 rwa --json gm buy  TSLA 100 -y --slippage 50                 # execute, max 0.5% slippage
 rwa --json gm sell TSLA all  -y                              # sell all (also 50% / exact)
+rwa --json gm buy  TSLA 100 --limit-price 400 -y             # conditional: fills only if quote <= 400 USDC/token
+rwa --json gm sell TSLA all --limit-price 450 -y             # conditional: fills only if quote >= 450
+rwa --json gm buy  TSLA 100 --max-bps 30 -y                  # reject if all-in cost (spread+fee) > 30 bps
 rwa --json gm buy-basket  AAPL 50 TSLA 50 NVDA 50 -y         # SYMBOL AMOUNT pairs (parallel)
 rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all  -y
 rwa --json gm close-all -y                                   # sell ALL positions (parallel, ~2-8s)
@@ -43,6 +46,14 @@ rwa --json gm reclaim                                        # close empty accou
 - `close-all` skips positions < $1.50 (MMs reject tiny swaps) and lists them separately.
 - Slippage: default 100 bps; hard-blocked above 3%. Amounts: exact `100`, `50%`, or `all`.
 - `search` items carry optional `asset_class`/`region`; `--tag` matches any Ondo tag label (24 factor labels incl. Large Cap, Dividend, High Yield).
+
+## Conditional orders (synthetic limit orders)
+
+`--limit-price <P>` (buy/sell only) executes **only if the quoted price** (USDC per token) is ≤ P for buy / ≥ P for sell (equality fills); otherwise the command exits 1 with `error_kind: condition_not_met` — same in `--dry-run`. The quote that passes the check is the one executed, so worst-case fill = limit ± slippage; pair with a tight `--slippage 20`. JSON echoes `limit_price` on success. Conflicts with `--quote-only`.
+
+- **Limit order:** schedule `rwa --json gm buy TSLA 100 --limit-price 400 --slippage 20 -y` (cron/loop, every N min) until it exits 0. `condition_not_met` = keep waiting, NOT an error to escalate.
+- **DCA:** plain scheduled `buy <SYM> <AMT> -y` — no limit-price needed.
+- **Stop-loss:** check the reference price yourself, then market `sell -y`. Do NOT use `--limit-price` for stops (a stop wants out, not a price guarantee).
 
 ## Key JSON
 
@@ -63,6 +74,8 @@ An optional `gas_refuel: {"usdc":"5","sol":"0.02...","tx":"..."}` object appears
 | `market_closed` | Weekend/holiday and this token doesn't trade off-hours. Flagships (TSLAon, NVDAon, SPYon, QQQon, GOOGLon…) trade 24/7 — check `gm hours --tradable` |
 | `not_tradable` | Skip token; verify with `gm tradable <SYM>` |
 | `slippage_too_high` | Reduce size or skip; MM cooldown after rapid buy+sell — wait 30–60s |
+| `condition_not_met` | `--limit-price` unmet — keep the order scheduled, retry next tick; not a failure |
+| `cost_too_high` | Quoted all-in cost exceeds `--max-bps` — raise the ceiling or wait for a tighter spread |
 | `amount_below_minimum` | Use ≥ 5 USDC per token |
 | `insufficient_funds` (SOL) | Non-gasless route needs ~0.002 SOL. The CLI normally auto-refuels from USDC; if it couldn't, retry (gasless route may fill) or fund SOL |
 | `insufficient_funds` (USDC) | Tell user to fund USDC |
