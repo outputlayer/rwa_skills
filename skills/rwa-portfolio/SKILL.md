@@ -56,6 +56,7 @@ Semantics agents must respect:
 - `avg_cost` = average entry price of the open position; `unrealized_usdc` = market value − invested; `realized_usdc` = locked-in P&L from sells; `total_pnl_usdc` = both.
 - A token with an `oversold_qty` field was partly sold beyond CLI-recorded buys (acquired elsewhere) — that part is excluded from P&L, not mispriced.
 - Use `portfolio` for what the wallet holds NOW (on-chain truth); use `pnl` for entry prices and profit.
+- `pnl` JSON carries `ledger_integrity`: `ok` | `legacy` (pre-chain entries) | `broken@line N` (history may be modified — flag to the user; P&L still computes).
 - Balances/prices are in **raw tokens** (the CLI's canonical frame). Dividend-accruing tokens carry an optional `shares_per_token` (e.g. 1.0077): wallets like Phantom display raw × that multiplier, so the CLI's balance can read slightly lower than the wallet's — same value, different unit. Token price = share price × multiplier (total-return).
 
 # Price history

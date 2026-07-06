@@ -9,7 +9,7 @@ description: >
 
 # RWA Trade
 
-Buy/sell 438 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pass `--json`; add `-y` to execute, `--dry-run` to preview.
+Buy/sell 438 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pass `--json`; add `-y` to execute, `--dry-run` to preview. **Since v0.6.0 `--json` без `-y` НЕ исполняет**: buy/sell/send/baskets/close-all fail closed with `error_kind: confirmation_required` (exit 1) — add `-y` for real execution. `reclaim` runs without confirmation (rent back to your own wallet).
 
 ## Golden rules
 
@@ -78,6 +78,7 @@ An optional `gas_refuel: {"usdc":"5","sol":"0.02...","tx":"..."}` object appears
 | `not_tradable` | Skip token; verify with `gm tradable <SYM>` |
 | `slippage_too_high` | Reduce size or skip; MM cooldown after rapid buy+sell — wait 30–60s |
 | `condition_not_met` | `--limit-price` unmet — keep the order scheduled, retry next tick; not a failure |
+| `confirmation_required` | `--json` without `-y` — add `-y` to execute or `--dry-run` to preview; never retry as-is |
 | `trading_paused` | Ondo dividend-window pause (ex-dividend; ETFs longer). Retry later; in baskets the item lands in `failed[]`, close-all skips it |
 | `cost_too_high` | Quoted all-in cost exceeds `--max-bps` — raise the ceiling or wait for a tighter spread |
 | `amount_below_minimum` | Use ≥ 5 USDC per token |
