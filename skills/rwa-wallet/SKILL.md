@@ -20,6 +20,7 @@ Wallet setup + transfers for the rwa CLI. Use `--json` for agent flows.
 - **USDC alone is enough to trade.** Swaps are usually gasless, and the CLI auto-buys SOL for fees when it runs low (dynamic 5–25 USDC; reported as `gas_refuel` in trade JSON; disable with `RWA_NO_AUTO_GAS=1`). `send`/`reclaim` still need SOL.
 - `send` transfers assets to another wallet; it does NOT sell them (use `gm sell` to swap).
 - `send USDC all` / `send SOL all` send the **entire** balance. For an exact amount, pass the value from CLI output — never manual arithmetic.
+- GM-token amounts are in **raw tokens**; wallets (Phantom) display raw × dividend multiplier, so "send what the wallet shows" can overshoot — the CLI then fails fast with `insufficient_funds` naming both numbers. Use `all` to avoid it.
 - `send SOL all` auto-reserves the tx fee; transfers use full on-chain precision.
 - After liquidation, run `reclaim` before the final `send SOL all`.
 - Never print secrets unless the user explicitly asks; `keys export` requires `--reveal` in `--json` mode.
