@@ -25,7 +25,7 @@ Buy/sell 438 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pas
 ## Commands
 
 ```bash
-rwa --json gm hours                                          # session + tradable_count + paused_count + offhours flagships (24/7 = flagships only)
+rwa --json gm hours                                          # session + tradable_count + paused_count + offhours flagships; next_session_at = epoch seconds (schedule on it)
 rwa --json gm search --tradable-only --sector Technology     # bulk scan
 rwa --json gm search --tag asia --tag "fixed income"         # any Ondo tag: region, asset class, factor
 rwa --json gm tradable TSLA NVDA                             # check specific symbols
@@ -85,6 +85,9 @@ An optional `gas_refuel: {"usdc":"5","sol":"0.02...","tx":"..."}` object appears
 | `insufficient_funds` (SOL) | Non-gasless route needs ~0.002 SOL. The CLI normally auto-refuels from USDC; if it couldn't, retry (gasless route may fill) or fund SOL |
 | `insufficient_funds` (USDC) | Tell user to fund USDC |
 | `no_position` / `Balance is 0` | No position to sell |
+| `unknown_token` | Symbol not in the GM list (typo?) — find it with `gm search --search <keyword>`; don't retry as-is |
+| `invalid_amount` / `invalid_address` | Bad user input (amount is a number, `NN%`, or `all`; address must be valid Solana) — fix, don't retry |
+| `lock_contention` (exit 75) | Another rwa process holds the lock — the lock covers EVERY invocation (even reads), so serialize ALL rwa calls; wait and retry |
 | `route_unfillable` | No fillable route after retries — now rare, since RFQ makers fund fills just-in-time. Try a larger amount or wait. (A stderr `note: RFQ maker funds just-in-time…` during a buy is NORMAL, not an error — the swap still lands.) |
 | Swap failed code -1000/-2003/-2004/-2005 | CLI already auto-retried — do NOT retry manually |
 | RPC `unavailable` (exit 75) | Transient — wait a few seconds; on repeats set `RWA_RPC_URL` to a dedicated endpoint |

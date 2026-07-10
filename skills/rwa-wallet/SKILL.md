@@ -32,7 +32,7 @@ Wallet setup + transfers for the rwa CLI. Use `--json` for agent flows.
 | Install CLI | `curl -fsSL https://raw.githubusercontent.com/outputlayer/rwa_cli/main/install.sh \| sh` |
 | Update CLI to latest | `rwa update -y` (`--check` to preview; verifies SHA-256, fail-closed) |
 | Show address | `rwa keys show` |
-| New wallet | `rwa keys generate` (encrypted; prints recovery phrase once) |
+| New wallet | `rwa keys generate` (encrypted; prints recovery phrase once). `--json` → `{status,pubkey,path,encrypted,mnemonic}` — CAPTURE `mnemonic` |
 | Import wallet | `rwa keys import --seed-phrase "..."` (or `--private-key <B58>` / `--file <PATH>`). Non-default account: add `--account <N>` (→ `m/44'/501'/N'/0'`, Phantom "Account N+1") or `--derivation-path "<PATH>"` |
 | Export / back up | `rwa --json keys export --reveal` → base58 key (Phantom format), JSON array, mnemonic |
 | Encrypt / decrypt | `rwa keys encrypt` / `rwa keys decrypt` |
