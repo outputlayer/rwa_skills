@@ -19,7 +19,7 @@ Buy/sell 438 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pas
 - `--quote-only` (buy) quotes any size without a balance check; never executes (rejects `-y`). JSON `status` is `dry_run`. Use to size a buy before funding.
 - `sell` swaps tokens → USDC; `send` transfers assets out. Never confuse them.
 - CLI auto-retries transient swap failures. **Do NOT retry manually** unless it reports failure after retries.
-- Multi-token = `buy-basket` / `sell-basket` / `close-all` — they run **in parallel by default** (bounded internally). Never loop `buy`/`sell` by hand. `--sequential` is a rate-limit fallback only. Parallel quotes are staggered to dodge Jupiter's per-wallet 429; for faster parallel set `RWA_JUPITER_API_KEY` (then `RWA_QUOTE_STAGGER_MS=0`).
+- Multi-token = `buy-basket` / `sell-basket` / `close-all` — they run **in parallel by default** (bounded internally). Never loop `buy`/`sell` by hand. `--sequential` is a rate-limit fallback only. Launches are staggered + adaptive (real runs and dry-run alike) to dodge Jupiter's per-wallet 429 — live: 5-token basket ≈ 3 s. Setting `RWA_JUPITER_API_KEY` auto-selects the faster keyed profile; no manual tuning.
 - Bulk filtering = `gm search` flags. **Never** pipe `gm list` through ad-hoc Python.
 
 ## Commands
