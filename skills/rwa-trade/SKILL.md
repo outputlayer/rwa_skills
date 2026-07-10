@@ -19,7 +19,7 @@ Buy/sell 438 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pas
 - `--quote-only` (buy) quotes any size without a balance check; never executes (rejects `-y`). JSON `status` is `dry_run`. Use to size a buy before funding.
 - `sell` swaps tokens → USDC; `send` transfers assets out. Never confuse them.
 - CLI auto-retries transient swap failures. **Do NOT retry manually** unless it reports failure after retries.
-- Multi-token = `buy-basket` / `sell-basket` / `close-all` — they run **in parallel by default** (bounded internally). Never loop `buy`/`sell` by hand. `--sequential` is a rate-limit fallback only.
+- Multi-token = `buy-basket` / `sell-basket` / `close-all` — they run **in parallel by default** (bounded internally). Never loop `buy`/`sell` by hand. `--sequential` is a rate-limit fallback only. Parallel quotes are staggered to dodge Jupiter's per-wallet 429; for faster parallel set `RWA_JUPITER_API_KEY` (then `RWA_QUOTE_STAGGER_MS=0`).
 - Bulk filtering = `gm search` flags. **Never** pipe `gm list` through ad-hoc Python.
 
 ## Commands
@@ -85,7 +85,7 @@ An optional `gas_refuel: {"usdc":"5","sol":"0.02...","tx":"..."}` object appears
 | `insufficient_funds` (SOL) | Non-gasless route needs ~0.002 SOL. The CLI normally auto-refuels from USDC; if it couldn't, retry (gasless route may fill) or fund SOL |
 | `insufficient_funds` (USDC) | Tell user to fund USDC |
 | `no_position` / `Balance is 0` | No position to sell |
-| `route_unfillable` | Every market maker declined this size right now — try a larger amount or wait |
+| `route_unfillable` | No fillable route after retries — now rare, since RFQ makers fund fills just-in-time. Try a larger amount or wait. (A stderr `note: RFQ maker funds just-in-time…` during a buy is NORMAL, not an error — the swap still lands.) |
 | Swap failed code -1000/-2003/-2004/-2005 | CLI already auto-retried — do NOT retry manually |
 | RPC `unavailable` (exit 75) | Transient — wait a few seconds; on repeats set `RWA_RPC_URL` to a dedicated endpoint |
 

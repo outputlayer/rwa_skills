@@ -33,7 +33,7 @@ Wallet setup + transfers for the rwa CLI. Use `--json` for agent flows.
 | Update CLI to latest | `rwa update -y` (`--check` to preview; verifies SHA-256, fail-closed) |
 | Show address | `rwa keys show` |
 | New wallet | `rwa keys generate` (encrypted; prints recovery phrase once) |
-| Import wallet | `rwa keys import --seed-phrase "..."` (or `--private-key <B58>` / `--file <PATH>`) |
+| Import wallet | `rwa keys import --seed-phrase "..."` (or `--private-key <B58>` / `--file <PATH>`). Non-default account: add `--account <N>` (→ `m/44'/501'/N'/0'`, Phantom "Account N+1") or `--derivation-path "<PATH>"` |
 | Export / back up | `rwa --json keys export --reveal` → base58 key (Phantom format), JSON array, mnemonic |
 | Encrypt / decrypt | `rwa keys encrypt` / `rwa keys decrypt` |
 | Multiple wallets | `rwa keys add <name> --path <p>` · `keys list` · `keys use <name>` · `rwa --wallet <name> gm ...` |
