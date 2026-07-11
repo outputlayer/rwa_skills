@@ -9,7 +9,7 @@ description: >
 
 # RWA Trade
 
-Buy/sell 438 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pass `--json`; add `-y` to execute, `--dry-run` to preview. **Since v0.6.0 `--json` без `-y` НЕ исполняет**: buy/sell/send/baskets/close-all fail closed with `error_kind: confirmation_required` (exit 1) — add `-y` for real execution. `reclaim` runs without confirmation (rent back to your own wallet).
+Buy/sell 438 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pass `--json`; add `-y` to execute, `--dry-run` to preview. **Since v0.6.0 `--json` без `-y` НЕ исполняет** buy/sell/send/baskets/close-all (fails closed). An otherwise-valid trade → `error_kind: confirmation_required`; a precondition failure (`insufficient_funds`/`no_position`/`amount_below_minimum`) surfaces its own kind first, and `close-all` on an empty wallet → `status:success`. Guarantee is "never executes", not "always confirmation_required". `reclaim` runs without confirmation (rent back to your own wallet).
 
 ## Golden rules
 

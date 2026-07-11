@@ -35,7 +35,7 @@ Wallet setup + transfers for the rwa CLI. Use `--json` for agent flows.
 | New wallet | `rwa keys generate` (encrypted; prints recovery phrase once). `--json` → `{status,pubkey,path,encrypted,mnemonic}` — CAPTURE `mnemonic` |
 | Import wallet | `rwa keys import --seed-phrase "..."` (or `--private-key <B58>` / `--file <PATH>`). Non-default account: add `--account <N>` (→ `m/44'/501'/N'/0'`, Phantom "Account N+1") or `--derivation-path "<PATH>"` |
 | Export / back up | `rwa --json keys export --reveal` → base58 key (Phantom format), JSON array, mnemonic |
-| Encrypt / decrypt | `rwa keys encrypt` / `rwa keys decrypt` |
+| Encrypt / decrypt | `rwa keys encrypt` / `rwa keys decrypt` (both speak `--json`; `decrypt` reads `RWA_PASSPHRASE` for scripts) |
 | Multiple wallets | `rwa keys add <name> --path <p>` · `keys list` · `keys use <name>` · `rwa --wallet <name> gm ...` |
 | Preview transfer | `rwa --json gm send <TOKEN> <AMT> <ADDR> --dry-run` |
 | Send USDC / SOL / token | `rwa --json gm send USDC 100 <ADDR> -y` |
