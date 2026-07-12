@@ -79,7 +79,7 @@ An optional `gas_refuel: {"usdc":"5","sol":"0.02...","tx":"..."}` object appears
 | `slippage_too_high` | Reduce size or skip; MM cooldown after rapid buy+sell — wait 30–60s |
 | `condition_not_met` | `--limit-price` unmet — keep the order scheduled, retry next tick; not a failure |
 | `confirmation_required` | `--json` without `-y` — add `-y` to execute or `--dry-run` to preview; never retry as-is |
-| `trading_paused` | Ondo dividend-window pause (ex-dividend; ETFs longer). Retry later; in baskets the item lands in `failed[]`, close-all skips it |
+| `trading_paused` | Ondo paused this asset: a dividend window OR the market is closed for it (weekends flag most non-24/7 tokens, so a weekend non-flagship gives `trading_paused`, not `market_closed`). Check `gm hours`/`next_session_at` for when it resumes — don't hammer-retry a weekend pause. In baskets → `failed[]`; close-all skips it |
 | `cost_too_high` | Quoted all-in cost exceeds `--max-bps` — raise the ceiling or wait for a tighter spread |
 | `amount_below_minimum` | Use ≥ 5 USDC per token |
 | `insufficient_funds` (SOL) | Non-gasless route needs ~0.002 SOL. The CLI normally auto-refuels from USDC; if it couldn't, retry (gasless route may fill) or fund SOL |
