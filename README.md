@@ -75,6 +75,9 @@ rwa --json gm search --tradable-only --sector Healthcare --type stock
 
 # 2. Buy all at once — per-token amounts, parallel
 rwa --json gm buy-basket JNJ 25 LLY 25 PFE 25 ABBV 25 -y   # parallel by default
+
+# ...or split one USDC total by percent weights (must sum to 100; each item ≥ 5 USDC)
+rwa --json gm buy-basket TSLA 50% NVDA 30% SPY 20% --total 1000 -y
 ```
 
 Sell specific positions:

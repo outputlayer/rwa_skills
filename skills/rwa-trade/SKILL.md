@@ -37,6 +37,7 @@ rwa --json gm sell TSLA all --limit-price 450 -y             # conditional: fill
 rwa --json gm buy  SPY 100 --limit-price 748 share -y        # limit per underlying SHARE (bare number = per token)
 rwa --json gm buy  TSLA 100 --max-bps 30 -y                  # reject if all-in cost (spread+fee) > 30 bps
 rwa --json gm buy-basket  AAPL 50 TSLA 50 NVDA 50 -y         # SYMBOL AMOUNT pairs (parallel)
+rwa --json gm buy-basket  TSLA 50% NVDA 30% SPY 20% --total 1000 -y  # weighted allocation of one USDC total
 rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all  -y
 rwa --json gm close-all -y                                   # sell ALL positions (parallel, ~2-8s)
 rwa --json gm close-all 50% -y                               # sell 50% of every position
@@ -44,6 +45,7 @@ rwa --json gm pnl                                            # avg entry + reali
 rwa --json gm reclaim                                        # close empty accounts, reclaim rent
 ```
 
+- `buy-basket --total <USDC>` (v0.7.8+): all pair amounts become percent weights that must sum to exactly 100; each computed item must clear the 5 USDC minimum; validation is local (`invalid_amount`/`amount_below_minimum`) before any network. Success/dry-run JSON echoes `allocation: {total, weights}`. Percent amounts without `--total` (and absolute amounts with it) are rejected.
 - `close-all` skips positions < $1.50 (MMs reject tiny swaps) and lists them separately.
 - Slippage: default 100 bps; hard-blocked above 3%. Amounts: exact `100`, `50%`, or `all`.
 - `search` items carry optional `asset_class`/`region`; `--tag` matches any Ondo tag label (24 factor labels incl. Large Cap, Dividend, High Yield).
