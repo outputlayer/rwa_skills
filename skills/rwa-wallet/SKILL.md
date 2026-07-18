@@ -52,6 +52,7 @@ Wallet setup + transfers for the rwa CLI. Use `--json` for agent flows.
 ```bash
 export RWA_PASSPHRASE="my passphrase"   # operational commands only (servers/CI)
 ```
+
 Caveat: with `RWA_PASSPHRASE` set in the env, a co-resident process can read it, collapsing the admin-class guarantee (and the send-policy escape-hatch second factor) to env-leak level. Keychain-only, no-env setup avoids this. Keychain isolation is macOS-strong; on Linux/Windows any same-user process can read the stored item.
 
 ## Canonical flows
