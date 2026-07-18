@@ -69,7 +69,7 @@ Unit: bare number = per **token**; add `share` (`--limit-price 748 share`; joine
 {"status":"success","sold":[{"token":"TSLAon","amount":"0.25","usdc":"96.50","tx":"..."}],"failed":[],"total_usdc":"96.50"}
 ```
 
-`status:"success"` only means the run finished — **always check `failed[]`** (always present). Partial success is normal.
+Multi-token status (baskets/close-all, since 0.7.9): `"success"` = all items ok; `"partial"` = some failed (exit 0, check `failed[]`); `"error"` = ALL failed (exit ≠ 0). So don't treat exit 0 + `success` as "everything bought" without also checking `failed[]` — and an all-failed basket now exits non-zero.
 An optional `gas_refuel: {"usdc":"5","sol":"0.02...","tx":"..."}` object appears when the CLI auto-bought SOL for fees before the trade (normal for USDC-only wallets — not an error).
 
 ## Errors → action
@@ -90,7 +90,9 @@ An optional `gas_refuel: {"usdc":"5","sol":"0.02...","tx":"..."}` object appears
 | `unknown_token` | Symbol not in the GM list (typo?) — find it with `gm search --search <keyword>`; don't retry as-is |
 | `invalid_amount` / `invalid_address` | Bad user input (amount is a number, `NN%`, or `all`; address must be valid Solana) — fix, don't retry |
 | `lock_contention` (exit 75) | Another rwa process holds the lock — the lock covers EVERY invocation (even reads), so serialize ALL rwa calls; wait and retry |
-| `route_unfillable` | No fillable route after retries — now rare, since RFQ makers fund fills just-in-time. Try a larger amount or wait. (A stderr `note: RFQ maker funds just-in-time…` during a buy is NORMAL, not an error — the swap still lands.) |
+| `route_unfillable` (exit 75 since 0.7.9, was 1) | No fillable route after retries — now rare, since RFQ makers fund fills just-in-time. Transient: try again / larger amount / wait. (A stderr `note: RFQ maker funds just-in-time…` during a buy is NORMAL, not an error — the swap still lands.) |
+| `recipient_not_allowed` (exit 1, on `send`) | The wallet has a send-policy whitelist and this address isn't on it. A HUMAN adds it (`rwa keys policy allow <ADDR>`, admin-class) — stop and tell the user; never try to bypass |
+| `interactive_required` (exit 1) | An admin-class `keys` command ran headless (decrypt/export --reveal/policy allow/store-passphrase) — needs a typed passphrase at a real terminal |
 | Swap failed code -1000/-2003/-2004/-2005 | CLI already auto-retried — do NOT retry manually |
 | RPC `unavailable` (exit 75) | Transient — wait a few seconds; on repeats set `RWA_RPC_URL` to a dedicated endpoint |
 

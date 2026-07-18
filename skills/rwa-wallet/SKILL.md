@@ -35,20 +35,24 @@ Wallet setup + transfers for the rwa CLI. Use `--json` for agent flows.
 | New wallet | `rwa keys generate` (encrypted; prints recovery phrase once). `--json` → `{status,pubkey,path,encrypted,mnemonic}` — CAPTURE `mnemonic` |
 | Import wallet | `rwa keys import --seed-phrase "..."` (or `--private-key <B58>` / `--file <PATH>`). Non-default account: add `--account <N>` (→ `m/44'/501'/N'/0'`, Phantom "Account N+1") or `--derivation-path "<PATH>"` |
 | Export / back up | `rwa --json keys export --reveal` → base58 key (Phantom format), JSON array, mnemonic |
-| Encrypt / decrypt | `rwa keys encrypt` / `rwa keys decrypt` (both speak `--json`; `decrypt` reads `RWA_PASSPHRASE` for scripts) |
+| Encrypt / decrypt | `rwa keys encrypt` / `rwa keys decrypt` (both speak `--json`). ADMIN-CLASS since 0.7.9: `decrypt` and `export --reveal` take the passphrase ONLY from a live TTY — `RWA_PASSPHRASE`/keychain are NOT consulted; headless → `error_kind: interactive_required` (exit 1) |
+| Store passphrase for headless trading | `rwa keys store-passphrase [--wallet N]` puts it in the OS keychain (verified first). Then trading/reads run without `RWA_PASSPHRASE`. `keys forget-passphrase` removes it. `RWA_KEYRING_DISABLE=1` skips the keychain |
+| Restrict `send` recipients | `rwa keys policy show / allow <ADDR> [--label L] / remove <ADDR>` — a per-wallet whitelist stored inside the encrypted payload; `allow`/`remove` need a typed passphrase (admin-class). Encrypted wallets only |
 | Multiple wallets | `rwa keys add <name> --path <p>` · `keys list` · `keys use <name>` · `rwa --wallet <name> gm ...` |
 | Preview transfer | `rwa --json gm send <TOKEN> <AMT> <ADDR> --dry-run` |
 | Send USDC / SOL / token | `rwa --json gm send USDC 100 <ADDR> -y` |
 | Withdraw everything | `send USDC all` then `send SOL all` |
 | Reclaim empty accounts | `rwa --json gm reclaim` (or `--token <SYM>`) |
 
-## Passphrase
+## Passphrase (two classes since 0.7.9)
 
-If the wallet is encrypted, commands prompt for the passphrase. For scripts:
+- **Operational** (trading, `keys show`, `keys policy show`, reads): passphrase resolves `RWA_PASSPHRASE` → OS keychain → interactive prompt. Recommended desktop-agent setup: encrypted wallet + `keys store-passphrase` (keychain), NO env passphrase — the agent trades headless but never learns the secret.
+- **Admin** (`keys decrypt`, `keys export --reveal`, `keys policy allow/remove`, `keys store-passphrase`): live TTY prompt ONLY — env/keychain deliberately ignored; headless → `interactive_required`. So an agent can't strip encryption, export the key, or edit the send-whitelist.
 
 ```bash
-export RWA_PASSPHRASE="my passphrase"
+export RWA_PASSPHRASE="my passphrase"   # operational commands only (servers/CI)
 ```
+Caveat: with `RWA_PASSPHRASE` set in the env, a co-resident process can read it, collapsing the admin-class guarantee (and the send-policy escape-hatch second factor) to env-leak level. Keychain-only, no-env setup avoids this. Keychain isolation is macOS-strong; on Linux/Windows any same-user process can read the stored item.
 
 ## Canonical flows
 
@@ -71,6 +75,8 @@ rwa --json gm send SOL  all <ADDR> -y     # 4. withdraw remaining SOL
 | `No wallet found` | Run `rwa keys generate` |
 | `insufficient_funds` (SOL, on send/reclaim) | Fund SOL, or free some by selling; trades usually don't need SOL |
 | `keys export` refused | Add `--reveal` (mandatory with `--json`); warn the user it prints secrets |
+| `interactive_required` (exit 1) | Admin-class command (`decrypt`/`export --reveal`/`policy allow`/`store-passphrase`) run headless — the human must type the passphrase at a real terminal; env/keychain won't unlock it. Don't retry as-is |
+| `recipient_not_allowed` (exit 1, on `send`) | Recipient isn't in the wallet's send-policy whitelist; a HUMAN adds it via `rwa keys policy allow <ADDR>`. Do NOT attempt to bypass — stop and tell the user |
 | RPC `unavailable` (exit 75) | Wait a few seconds; on repeats set `RWA_RPC_URL` to a dedicated endpoint |
 | `rwa update` → `network`/`rate_limited` (exit 75) | Transient — retry shortly |
 
