@@ -98,8 +98,11 @@ An optional `gas_refuel: {"usdc":"5","sol":"0.02...","tx":"..."}` object appears
 | `route_unfillable` (exit 75 since 0.7.9, was 1) | No fillable route after retries — now rare, since RFQ makers fund fills just-in-time. Transient: try again / larger amount / wait. (A stderr `note: RFQ maker funds just-in-time…` during a buy is NORMAL, not an error — the swap still lands.) |
 | `recipient_not_allowed` (exit 1, on `send`) | The wallet has a send-policy whitelist and this address isn't on it. A HUMAN adds it (`rwa keys policy allow <ADDR>`, admin-class) — stop and tell the user; never try to bypass |
 | `interactive_required` (exit 1) | An admin-class `keys` command ran headless (decrypt/export --reveal/policy allow/store-passphrase) — needs a typed passphrase at a real terminal |
+| `missing_blockhash` / `invalid_blockhash` (exit 75 since 0.7.11) | Transient RPC/tx-format hiccup — a fresh blockhash on retry fixes it; retry the command |
+| `simulation_failure` (exit 1) | The tx was proven to fail on-chain pre-send (nothing submitted) — permanent, don't retry as-is |
 | Swap failed code -1000/-2003/-2004/-2005 | CLI already auto-retried — do NOT retry manually |
 | RPC `unavailable` (exit 75) | Transient — wait a few seconds; on repeats set `RWA_RPC_URL` to a dedicated endpoint |
+| `execute_unavailable` (exit 75) | Transient (incl. a pre-sign-sim RPC failure since 0.7.11) — retry. In an all-failed basket/close-all where every leg was transient, the command exits 75 (not 1) — safe to retry the whole batch |
 
 Exit code **75** = transient, safe to retry the command; **1** = permanent, don't.
 
