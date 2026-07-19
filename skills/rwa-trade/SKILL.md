@@ -38,6 +38,9 @@ rwa --json gm buy  SPY 100 --limit-price 748 share -y        # limit per underly
 rwa --json gm buy  TSLA 100 --max-bps 30 -y                  # reject if all-in cost (spread+fee) > 30 bps
 rwa --json gm buy-basket  AAPL 50 TSLA 50 NVDA 50 -y         # SYMBOL AMOUNT pairs (parallel)
 rwa --json gm buy-basket  TSLA 50% NVDA 30% SPY 20% --total 1000 -y  # weighted allocation of one USDC total
+rwa --json gm buy-basket  --total 1000 --equal TSLA NVDA SPY -y      # EVEN split across bare symbols (arbitrary N)
+rwa --json gm buy-basket  --from-file basket.txt --total 500 -y      # tokens from a file (- = stdin)
+rwa --json gm search --tradable-only --sector Technology | jq -r '.items[].symbol' | xargs rwa gm buy-basket --total 1000 --equal -y  # filter-driven bulk (compose search → buy-basket)
 rwa --json gm sell-basket SPY 5 TSLA 3 NVDA all  -y
 rwa --json gm close-all -y                                   # sell ALL positions (parallel, ~2-8s)
 rwa --json gm close-all 50% -y                               # sell 50% of every position
@@ -46,6 +49,8 @@ rwa --json gm reclaim                                        # close empty accou
 ```
 
 - `buy-basket --total <USDC>` (v0.7.8+): all pair amounts become percent weights that must sum to exactly 100; each computed item must clear the 5 USDC minimum; validation is local (`invalid_amount`/`amount_below_minimum`) before any network. Success/dry-run JSON echoes `allocation: {total, weights}`. Percent amounts without `--total` (and absolute amounts with it) are rejected.
+- `buy-basket --equal` (v0.7.10+, requires `--total`): splits the total EVENLY across **bare symbols** (no per-token amounts) — `--total 1000 --equal TSLA NVDA SPY` → ~333.33 each (floor + dust to first, same 5 USDC/item minimum). It's the only clean way to equal-weight an arbitrary N under the exact-100 `--total` rule (3×33.33 ≠ 100), so it's the go-to for filter-driven bulk. `--equal` with amount/percent tokens (or without `--total`) → `invalid_amount` pre-network.
+- `buy-basket --from-file <path>` (v0.7.10+): reads tokens from a file instead of args; `-` = stdin (pipe `search` output straight in). Whitespace/newline separated; blank and `#` comment lines ignored. Mutually exclusive with positional tokens. Works with all three amount modes. **Filter-driven bulk buy** = compose, don't add flags: `rwa --json gm search --tradable-only --sector X | jq -r '.items[].symbol' | xargs rwa gm buy-basket --total N --equal -y` (or `search … > basket.txt` then `buy-basket --from-file basket.txt --total N --equal -y`). `--equal` is required here — the filtered N is arbitrary.
 - `close-all` skips positions < $1.50 (MMs reject tiny swaps) and lists them separately.
 - Slippage: default 100 bps; hard-blocked above 3%. Amounts: exact `100`, `50%`, or `all`.
 - `search` items carry optional `asset_class`/`region`; `--tag` matches any Ondo tag label (24 factor labels incl. Large Cap, Dividend, High Yield).
