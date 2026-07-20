@@ -35,6 +35,7 @@ rwa --json gm portfolio <WALLET_ADDR>     # Any public wallet
 
 ```bash
 rwa --json gm pnl        # own wallet only (built from the local trade ledger)
+rwa --json gm pnl --all  # compare EVERY wallet that traded via this CLI (one row per ledger, no keys needed)
 ```
 
 ```json
@@ -52,7 +53,9 @@ rwa --json gm pnl        # own wallet only (built from the local trade ledger)
 
 Semantics agents must respect:
 
-- Built **only from trades this CLI executed** (every buy/sell is logged locally per wallet). Deposits/withdrawals are cash movements and are ignored by design.
+- Built **only from trades this CLI executed** (every buy/sell is logged locally per wallet). Deposits and inbound transfers are ignored by design; a CLI-recorded `send` of a GM token DOES shrink the position at avg cost with no realized impact (since 0.7.13 — no phantom holdings after sending tokens away).
+- JSON carries `ledger_path` — the per-wallet ledger file behind the numbers (delete it to reset history).
+- `pnl --all` returns `{wallets:[{wallet, trades_recorded, invested_usdc, unrealized_usdc?, realized_usdc, total_pnl_usdc?, ledger_integrity}]}` sorted by total P&L desc — use it to compare wallet performance.
 - `avg_cost` = average entry price of the open position; `unrealized_usdc` = market value − invested; `realized_usdc` = locked-in P&L from sells; `total_pnl_usdc` = both.
 - A token with an `oversold_qty` field was partly sold beyond CLI-recorded buys (acquired elsewhere) — that part is excluded from P&L, not mispriced.
 - Use `portfolio` for what the wallet holds NOW (on-chain truth); use `pnl` for entry prices and profit.
