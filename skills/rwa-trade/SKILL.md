@@ -53,7 +53,7 @@ rwa --json gm reclaim                                        # close empty accou
 - `buy-basket --from-file <path>` (v0.7.10+): reads tokens from a file instead of args; `-` = stdin (pipe `search` output straight in). Whitespace/newline separated; blank and `#` comment lines ignored. Mutually exclusive with positional tokens. Works with all three amount modes. **Filter-driven bulk buy** = compose, don't add flags: `rwa --json gm search --tradable-only --sector X | jq -r '.items[].symbol' | xargs rwa gm buy-basket --total N --equal -y` (or `search … > basket.txt` then `buy-basket --from-file basket.txt --total N --equal -y`). `--equal` is required here — the filtered N is arbitrary.
 - `close-all` skips positions < $1.50 (MMs reject tiny swaps) and lists them separately.
 - **close-all exit 75 (since 0.7.14):** if any `skipped[]` entry is retryable (`trading_paused`, not tradable in current session, market data unavailable) the run reports `status:"partial"` + `incomplete_reason` and exits **75** — even when every position was skipped. Positions are still in the wallet: STOP the exit chain (no `reclaim`/`send`), retry when the market reopens. Dust skips are `retryable:false` and keep `success`/exit 0. `--dry-run` exits 0 but carries `incomplete_reason`.
-- Slippage: default 100 bps; hard-blocked above 3%. Amounts: exact `100`, `50%`, or `all`.
+- Slippage: default 100 bps; hard-blocked above 3%. Amounts: exact `100`, `50%`, or `all`. Percentages: max 2 decimals, `0 < pct ≤ 100` (since 0.7.15 `33.333%`/`0%` → `invalid_amount`, never rounded; `sell-basket` rejects them before any leg runs).
 - `search` items carry optional `asset_class`/`region`; `--tag` matches any Ondo tag label (24 factor labels incl. Large Cap, Dividend, High Yield).
 
 ## Conditional orders (synthetic limit orders)
@@ -94,7 +94,7 @@ An optional `gas_refuel: {"usdc":"5","sol":"0.02...","tx":"..."}` object appears
 | `insufficient_funds` (USDC) | Tell user to fund USDC |
 | `no_position` / `Balance is 0` | No position to sell |
 | `unknown_token` | Symbol not in the GM list (typo?) — find it with `gm search --search <keyword>`; don't retry as-is |
-| `invalid_amount` / `invalid_address` | Bad user input (amount is a number, `NN%`, or `all`; address must be valid Solana) — fix, don't retry |
+| `invalid_amount` / `invalid_address` | Bad user input (amount is a number, `NN%` with ≤2 decimals, or `all`; address must be valid Solana) — fix, don't retry |
 | `lock_contention` (exit 75) | Another rwa process holds the lock — the lock covers EVERY invocation (even reads), so serialize ALL rwa calls; wait and retry |
 | `route_unfillable` (exit 75 since 0.7.9, was 1) | No fillable route after retries — now rare, since RFQ makers fund fills just-in-time. Transient: try again / larger amount / wait. (A stderr `note: RFQ maker funds just-in-time…` during a buy is NORMAL, not an error — the swap still lands.) |
 | `recipient_not_allowed` (exit 1, on `send`) | The wallet has a send-policy whitelist and this address isn't on it. A HUMAN adds it (`rwa keys policy allow <ADDR>`, admin-class) — stop and tell the user; never try to bypass |
@@ -102,8 +102,8 @@ An optional `gas_refuel: {"usdc":"5","sol":"0.02...","tx":"..."}` object appears
 | `missing_blockhash` / `invalid_blockhash` (exit 75 since 0.7.11) | Transient RPC/tx-format hiccup — a fresh blockhash on retry fixes it; retry the command |
 | `simulation_failure` (exit 1) | The tx was proven to fail on-chain pre-send (nothing submitted) — permanent, don't retry as-is |
 | Swap failed code -1000/-2003/-2004/-2005 | CLI already auto-retried — do NOT retry manually |
-| RPC `unavailable` (exit 75) | Transient — wait a few seconds; on repeats set `RWA_RPC_URL` to a dedicated endpoint |
-| `execute_unavailable` (exit 75) | Transient (incl. a pre-sign-sim RPC failure since 0.7.11) — retry. In an all-failed basket/close-all where every leg was transient, the command exits 75 (not 1) — safe to retry the whole batch |
+| `rpc_unavailable` (exit 75) | Transient (network/5xx/rate-limit/node-behind) — wait a few seconds; on repeats set `RWA_RPC_URL` to a dedicated endpoint. Since 0.7.15 an RPC 401/403 or request error is `error_kind: null`, exit 1 — fix the RPC URL/key, don't retry |
+| `execute_unavailable` (exit 75) | Transient (incl. a pre-sign-sim RPC failure since 0.7.11, and a Jupiter `/order` quote 429/5xx since 0.7.15) — retry. In an all-failed basket/close-all where every leg was transient, the command exits 75 (not 1) — safe to retry the whole batch |
 
 Exit code **75** = transient, safe to retry the command; **1** = permanent, don't.
 

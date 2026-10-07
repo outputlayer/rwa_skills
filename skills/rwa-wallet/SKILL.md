@@ -42,7 +42,7 @@ Wallet setup + transfers for the rwa CLI. Use `--json` for agent flows.
 | Preview transfer | `rwa --json gm send <TOKEN> <AMT> <ADDR> --dry-run` |
 | Send USDC / SOL / token | `rwa --json gm send USDC 100 <ADDR> -y` |
 | Withdraw everything | `send USDC all` then `send SOL all` |
-| Reclaim empty accounts | `rwa --json gm reclaim` (or `--token <SYM>`) |
+| Reclaim empty accounts | `rwa --json gm reclaim` (or `--token <SYM>`; an unknown symbol → `unknown_token`) |
 
 ## Passphrase (two classes since 0.7.9)
 
