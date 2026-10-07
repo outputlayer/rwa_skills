@@ -9,7 +9,7 @@ description: >
 
 # RWA Trade
 
-Buy/sell 438 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pass `--json`; add `-y` to execute, `--dry-run` to preview. **Since v0.6.0 `--json` без `-y` НЕ исполняет** buy/sell/send/baskets/close-all (fails closed). An otherwise-valid trade → `error_kind: confirmation_required`; a precondition failure (`insufficient_funds`/`no_position`/`amount_below_minimum`) surfaces its own kind first, and `close-all` on an empty wallet → `status:success`. Guarantee is "never executes", not "always confirmation_required". `reclaim` runs without confirmation (rent back to your own wallet).
+Buy/sell 450 tokenized stocks & ETFs (Ondo Global Markets) on Solana. Always pass `--json`; add `-y` to execute, `--dry-run` to preview. **Since v0.6.0 `--json` без `-y` НЕ исполняет** buy/sell/send/baskets/close-all (fails closed). An otherwise-valid trade → `error_kind: confirmation_required`; a precondition failure (`insufficient_funds`/`no_position`/`amount_below_minimum`) surfaces its own kind first, and `close-all` on an empty wallet → `status:success`. Guarantee is "never executes", not "always confirmation_required". `reclaim` runs without confirmation (rent back to your own wallet).
 
 ## Golden rules
 
@@ -52,6 +52,7 @@ rwa --json gm reclaim                                        # close empty accou
 - `buy-basket --equal` (v0.7.10+, requires `--total`): splits the total EVENLY across **bare symbols** (no per-token amounts) — `--total 1000 --equal TSLA NVDA SPY` → ~333.33 each (floor + dust to first, same 5 USDC/item minimum). It's the only clean way to equal-weight an arbitrary N under the exact-100 `--total` rule (3×33.33 ≠ 100), so it's the go-to for filter-driven bulk. `--equal` with amount/percent tokens (or without `--total`) → `invalid_amount` pre-network.
 - `buy-basket --from-file <path>` (v0.7.10+): reads tokens from a file instead of args; `-` = stdin (pipe `search` output straight in). Whitespace/newline separated; blank and `#` comment lines ignored. Mutually exclusive with positional tokens. Works with all three amount modes. **Filter-driven bulk buy** = compose, don't add flags: `rwa --json gm search --tradable-only --sector X | jq -r '.items[].symbol' | xargs rwa gm buy-basket --total N --equal -y` (or `search … > basket.txt` then `buy-basket --from-file basket.txt --total N --equal -y`). `--equal` is required here — the filtered N is arbitrary.
 - `close-all` skips positions < $1.50 (MMs reject tiny swaps) and lists them separately.
+- **close-all exit 75 (since 0.7.14):** if any `skipped[]` entry is retryable (`trading_paused`, not tradable in current session, market data unavailable) the run reports `status:"partial"` + `incomplete_reason` and exits **75** — even when every position was skipped. Positions are still in the wallet: STOP the exit chain (no `reclaim`/`send`), retry when the market reopens. Dust skips are `retryable:false` and keep `success`/exit 0. `--dry-run` exits 0 but carries `incomplete_reason`.
 - Slippage: default 100 bps; hard-blocked above 3%. Amounts: exact `100`, `50%`, or `all`.
 - `search` items carry optional `asset_class`/`region`; `--tag` matches any Ondo tag label (24 factor labels incl. Large Cap, Dividend, High Yield).
 

@@ -101,7 +101,7 @@ rwa --json gm portfolio
 Withdraw after liquidation:
 
 ```bash
-rwa --json gm close-all -y
+rwa --json gm close-all -y   # exit 75 → positions remain; stop here, retry later
 rwa --json gm reclaim
 rwa --json gm send USDC all <ADDR> -y
 rwa --json gm send SOL all <ADDR> -y

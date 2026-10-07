@@ -29,7 +29,21 @@ rwa --json gm portfolio <WALLET_ADDR>     # Any public wallet
 }
 ```
 
-`gm_alloc_pct` = allocation within GM positions only (not total portfolio including cash).
+`gm_alloc_pct` = allocation within GM positions only (not total portfolio including cash). Every position also carries `sector`/`asset_class`/`region`/`type`/`tags` (Ondo labels, omitted when unknown) — no join against `gm search` needed.
+
+## Slicing (`--view`, since 0.7.14)
+
+```bash
+rwa --json gm portfolio --view sector              # split into per-sector groups
+rwa --json gm portfolio --view Dividend            # filter: only positions tagged Dividend
+rwa --json gm portfolio --view MRNA,CAPR           # filter: only these tickers
+rwa --json gm portfolio --view Healthcare,factor   # filter, then split by factor
+```
+
+- Category names (`sector`, `region`, `class`, `type`, `factor`) SPLIT; tag labels/tickers FILTER. Same-category labels OR, different categories AND; at most one split category.
+- JSON adds `gm_positions.view` + `gm_positions.groups` (always present with the flag; `group: null` when no split). `positions[]` is narrowed to matches, but `gm_positions.value_usd` and `gm_alloc_pct` stay **full-portfolio** — use `view.matched_value_usd` for the slice total.
+- `--view factor` groups OVERLAP (multi-label) and don't sum to the total — JSON marks `overlapping: true`.
+- No match → exit 0 with `groups: []`; unknown or all-blank term → `invalid_view` (exit 1).
 
 # P&L (entry prices, realized/unrealized)
 

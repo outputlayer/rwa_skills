@@ -63,7 +63,7 @@ rwa keys generate && rwa keys show        # create, get the address, fund USDC
 rwa --json gm buy TSLA 10 -y              # CLI auto-buys gas SOL if needed
 
 # Full withdrawal:
-rwa --json gm close-all -y                # 1. liquidate positions (parallel)
+rwa --json gm close-all -y                # 1. liquidate positions (parallel) — exit 75 = positions left (paused/closed): STOP, retry later
 rwa --json gm reclaim                     # 2. recover SOL rent from empty accounts
 rwa --json gm send USDC all <ADDR> -y     # 3. withdraw USDC
 rwa --json gm send SOL  all <ADDR> -y     # 4. withdraw remaining SOL
