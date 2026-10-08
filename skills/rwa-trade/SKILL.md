@@ -104,6 +104,7 @@ An optional `gas_refuel: {"usdc":"5","sol":"0.02...","tx":"..."}` object appears
 | Swap failed code -1000/-2003/-2004/-2005 | CLI already auto-retried — do NOT retry manually |
 | `rpc_unavailable` (exit 75) | Transient (network/5xx/rate-limit/node-behind) — wait a few seconds; on repeats set `RWA_RPC_URL` to a dedicated endpoint. Since 0.7.15 an RPC 401/403 or request error is `error_kind: null`, exit 1 — fix the RPC URL/key, don't retry |
 | `execute_unavailable` (exit 75) | Transient (incl. a pre-sign-sim RPC failure since 0.7.11, and a Jupiter `/order` quote 429/5xx since 0.7.15) — retry. In an all-failed basket/close-all where every leg was transient, the command exits 75 (not 1) — safe to retry the whole batch |
+| `ondo_unavailable` (exit 75) | Ondo assets/session-limits API temporarily down (network, 403 WAF block, 429, 5xx) — on `search`/`tradable` and the off-hours pre-trade check (since 0.7.17; previously `search`/`tradable` gave exit 1 and off-hours buy/sell a false `market_closed`). Wait 1–4 min and retry |
 
 Exit code **75** = transient, safe to retry the command; **1** = permanent, don't.
 
